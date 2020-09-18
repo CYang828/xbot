@@ -1,0 +1,3 @@
+class Translator(object):
+    pass
+

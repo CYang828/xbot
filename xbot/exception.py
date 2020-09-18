@@ -1,0 +1,2 @@
+class XBotException(Exception):
+    pass
