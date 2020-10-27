@@ -5,6 +5,8 @@ This is a chat bot for X.
 ![architecture](asset/xbot-architecture.png)
 
 ## Project Index
+'''
+
 * xbot
     * asset(素材文件)
     * data(数据集和数据处理相关文件)
@@ -15,6 +17,14 @@ This is a chat bot for X.
                 * test.json.zip
                 * train.json.zip
                 * val.json.zip
+    * script(训练和测试脚本)
+        * nlu
+            * intent
+            * slot
+        * dm
+            * dst
+            * dp
+        * nlg
     * test(单元测试)
     * xbot(xbot机器人项目源码，该部分代码不包含模型train和test代码，只包含模型和参数load代码)
         * data(对话机器人对话过程中数据处理模块)
