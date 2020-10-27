@@ -19,6 +19,7 @@ This is a chatbot for X.
 
 ## Dataset
 [CrossWOZ](https://arxiv.org/pdf/2002.11893.pdf)
+![](asset/crosswoz.jpg)
 
 ## Project Index
 ```
