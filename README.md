@@ -38,9 +38,9 @@ This is a chat bot for X.
         * nlg(对话生成模块)
         * util(工具模块)
         * hippocampus(知识库模块)
-        exception.py(异常类定义代码)
-        chatbot.py(对话机器人主体代码)
-        pipeline.py(管道处理代码)
-        response.py(对话回复代码)
-    requirements.txt(项目中使用的包明和版本号)
-    tox.ini
+    * exception.py(异常类定义代码)
+    * chatbot.py(对话机器人主体代码)
+    * pipeline.py(管道处理代码)
+    * response.py(对话回复代码)
+    * requirements.txt(项目中使用的包明和版本号)
+    * tox.ini
