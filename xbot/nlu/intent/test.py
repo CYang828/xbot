@@ -8,6 +8,7 @@ from dataloader import Dataloader
 from jointBERT import JointBERT
 from postprocess import is_slot_da, calculateF1, recover_intent
 
+
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -17,7 +18,6 @@ def set_seed(seed):
 parser = argparse.ArgumentParser(description="Test a model.")
 parser.add_argument('--config_path',
                     help='path to config file')
-
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json')))
     tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json')))
-    dataloader = Dataloader(intent_vocab=intent_vocab,pretrained_weights=config['model']['pretrained_weights'])
+    dataloader = Dataloader(intent_vocab=intent_vocab, pretrained_weights=config['model']['pretrained_weights'])
     print('intent num:', len(intent_vocab))
     print('tag num:', len(tag_vocab))
     for data_key in ['val', 'test']:
@@ -64,7 +64,6 @@ if __name__ == '__main__':
             slot_logits, intent_logits, batch_slot_loss, batch_intent_loss = model.forward(word_seq_tensor,
                                                                                            word_mask_tensor,
                                                                                            intent_tensor)
-
 
         slot_loss += batch_slot_loss.item() * real_batch_size
         intent_loss += batch_intent_loss.item() * real_batch_size

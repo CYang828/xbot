@@ -7,9 +7,10 @@ import numpy as np
 import zipfile
 import torch
 from transformers import AdamW, get_linear_schedule_with_warmup
-from dataloader import Dataloader
-from jointBERT import JointBERT
-from postprocess import is_slot_da, calculateF1, recover_intent
+from .dataloader import Dataloader
+from .jointBERT import JointBERT
+from .postprocess import is_slot_da, calculateF1, recover_intent
+
 
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 
@@ -35,14 +36,14 @@ if __name__ == '__main__':
 
     set_seed(config['seed'])
 
-
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
+    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'), encoding="utf-8"))
 
     dataloader = Dataloader(intent_vocab=intent_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
 
     for data_key in ['train', 'val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)),encoding="utf-8")), data_key,
+        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)), encoding="utf-8")),
+                             data_key,
                              cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
@@ -118,7 +119,7 @@ if __name__ == '__main__':
                 word_seq_tensor, intent_tensor, word_mask_tensor = pad_batch
 
                 with torch.no_grad():
-                    intent_logits, intent_loss = model.forward(word_seq_tensor,word_mask_tensor,intent_tensor)
+                    intent_logits, intent_loss = model.forward(word_seq_tensor, word_mask_tensor, intent_tensor)
 
                 val_intent_loss += intent_loss.item() * real_batch_size
                 for j in range(real_batch_size):
@@ -126,11 +127,10 @@ if __name__ == '__main__':
                     labels = ori_batch[j][3]
 
                     predict_golden['intent'].append({
-                        'predict': [x for x in predicts ],
+                        'predict': [x for x in predicts],
                         'golden': [x for x in labels]
                     })
 
-            
             total = len(dataloader.data['val'])
             val_intent_loss /= total
             print('%d samples val' % total)
@@ -138,7 +138,6 @@ if __name__ == '__main__':
 
             writer.add_scalar('intent_loss/train', train_intent_loss, global_step=step)
             writer.add_scalar('intent_loss/val', val_intent_loss, global_step=step)
-
 
             for x in ['intent']:
                 precision, recall, F1 = calculateF1(predict_golden[x])
