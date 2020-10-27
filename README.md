@@ -9,7 +9,7 @@ This is a chat bot for X.
 | Type | URL | Password |
 | --- | --- | --- | 
 | NLU-joint-model | https://pan.baidu.com/s/1Uqb0Ci2HIlA-AhxnDq2-Mg | dnbr |
-| NLU-slot-model | 链接: https://pan.baidu.com/s/1RYlNIRJwc3vBFjdUxdcICA | pepd |
+| NLU-slot-model | https://pan.baidu.com/s/1RYlNIRJwc3vBFjdUxdcICA | pepd |
 
 
 ## Architecture
