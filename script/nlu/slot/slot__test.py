@@ -11,8 +11,13 @@ import json
 import random
 import numpy as np
 import torch
-from convlab2.nlu.jointBERT.dataloader_zjw import Dataloader
-from convlab2.nlu.jointBERT.jointBERT_zjw import JointBERT
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = curPath[:curPath.find("xbot\\")+len("xbot\\")]
+import sys
+sys.path.append(rootPath+'/xbot')
+from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
+from xbot.nlu.slot.slot_bert_model import JointBERT
+from data.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
 
 
 def set_seed(seed):
@@ -37,8 +42,7 @@ if __name__ == '__main__':
     set_seed(config['seed'])
 
 
-    print('-' * 20 + 'dataset:crosswoz' + '-' * 20)
-    from convlab2.nlu.jointBERT.crosswoz.postprocess_zjw import is_slot_da, calculateF1, recover_intent
+
 
     intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
     tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'),encoding="utf-8"))

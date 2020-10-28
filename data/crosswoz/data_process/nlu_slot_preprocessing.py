@@ -102,5 +102,5 @@ def preprocess(mode):
 
 
 if __name__ == '__main__':
-    mode = sys.argv[1]
+    mode = 'all'
     preprocess(mode)
