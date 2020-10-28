@@ -1,11 +1,16 @@
-import abc
+from abc import ABC
+
+from xbot.gl import DEFAULT_MODEL_DST
+from xbot.util.download import download_from_url
+
+import pytorch_lightning as pl
 
 
-class Model(abc.ABC):
+class Model(pl.LightningDataModule, ABC):
     """XBot Model"""
     def __init__(self):
-        self._default_weight = None
+        super(Model, self).__init__()
 
-    @abc.abstractmethod
-    def fit(self, x, y):
-        raise NotImplemented
+    @staticmethod
+    def load_from_net(url):
+        download_from_url(url, DEFAULT_MODEL_DST)

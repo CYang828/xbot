@@ -2,13 +2,24 @@ import torch
 from torch import nn
 from transformers import BertModel
 
+from xbot.model import Model
 
-class JointBERT(nn.Module):
+
+class IntentMultiLabelFineTuner(Model):
+    def __init__(self, hparams):
+        super(IntentMultiLabelFineTuner, self).__init__()
+        self.hparams = hparams
+        self.model = BertModel.from_pretrained(hparams.model_name_or_path)
+        self.tokenizer = None
+
+
+class BertIntentClassificaiton(Model):
+    """Intent Classification with Bert"""
     def __init__(self, model_config, device, intent_dim, intent_weight=None):
-        super(JointBERT, self).__init__()
+        super(BertIntentClassificaiton, self).__init__()
         self.intent_num_labels = intent_dim
         self.device = device
-        self.intent_weight = intent_weight if intent_weight is not None else torch.tensor([1.]*intent_dim)
+        self.intent_weight = intent_weight if intent_weight is not None else torch.tensor([1.] * intent_dim)
 
         print(model_config['pretrained_weights'])
         self.bert = BertModel.from_pretrained(model_config['pretrained_weights'])
@@ -27,7 +38,7 @@ class JointBERT(nn.Module):
             nn.init.xavier_uniform_(self.intent_hidden.weight)
         else:
             if self.context:
-                self.intent_classifier = nn.Linear( self.bert.config.hidden_size, self.intent_num_labels)
+                self.intent_classifier = nn.Linear(self.bert.config.hidden_size, self.intent_num_labels)
             else:
                 self.intent_classifier = nn.Linear(self.bert.config.hidden_size, self.intent_num_labels)
         nn.init.xavier_uniform_(self.intent_classifier.weight)
@@ -37,15 +48,16 @@ class JointBERT(nn.Module):
     def forward(self, word_seq_tensor, word_mask_tensor, intent_tensor=None):
         if not self.finetune:
             self.bert.eval()
-            with torch.no_grad():   ##torch.no_grad() 是一个上下文管理器，被该语句 wrap 起来的部分将不会track 梯度。
+            # torch.no_grad() 是一个上下文管理器，被该语句 wrap 起来的部分将不会track梯度。
+            with torch.no_grad():
                 outputs = self.bert(input_ids=word_seq_tensor,
                                     attention_mask=word_mask_tensor)
-        else:##更新参数
+        else:
+            # 更新参数
             outputs = self.bert(input_ids=word_seq_tensor,
                                 attention_mask=word_mask_tensor)
 
         pooled_output = outputs[1]
-
 
         if self.hidden_units > 0:
             pooled_output = nn.functional.relu(self.intent_hidden(self.dropout(pooled_output)))
@@ -57,4 +69,3 @@ class JointBERT(nn.Module):
             intent_loss = self.intent_loss_fct(intent_logits, intent_tensor)
 
         return intent_logits, intent_loss
-

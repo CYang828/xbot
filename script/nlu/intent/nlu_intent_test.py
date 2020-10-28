@@ -8,6 +8,7 @@ from xbot.data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from xbot.xbot.nlu.intent.jointBERT import JointBERT
 from xbot.data.crosswoz.data_process.nlu_intent_postprocess import is_slot_da, calculateF1, recover_intent
 
+
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -18,7 +19,6 @@ parser = argparse.ArgumentParser(description="Test a model.")
 parser.add_argument('--config_path',
                     help='path to config file')
 
-
 if __name__ == '__main__':
     args = parser.parse_args()
     config = json.load(open(args.config_path))
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     DEVICE = config['DEVICE']
     set_seed(config['seed'])
     intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json')))
-    dataloader = Dataloader(intent_vocab=intent_vocab,pretrained_weights=config['model']['pretrained_weights'])
+    dataloader = Dataloader(intent_vocab=intent_vocab, pretrained_weights=config['model']['pretrained_weights'])
     print('intent num:', len(intent_vocab))
     for data_key in ['val', 'test']:
         dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)))), data_key,
@@ -54,9 +54,8 @@ if __name__ == '__main__':
         pad_batch = tuple(t.to(DEVICE) for t in pad_batch)
         word_seq_tensor, intent_tensor, word_mask_tensor = pad_batch
 
-
         with torch.no_grad():
-            intent_logits, batch_intent_loss = model.forward(word_seq_tensor,word_mask_tensor,intent_tensor)
+            intent_logits, batch_intent_loss = model.forward(word_seq_tensor, word_mask_tensor, intent_tensor)
 
         intent_loss += batch_intent_loss.item() * real_batch_size
         for j in range(real_batch_size):
@@ -64,8 +63,8 @@ if __name__ == '__main__':
             labels = ori_batch[j][3]
 
             predict_golden['intent'].append({
-                'predict': [x for x in predicts ],
-                'golden': [x for x in labels ]
+                'predict': [x for x in predicts],
+                'golden': [x for x in labels]
             })
 
     total = len(dataloader.data[data_key])
