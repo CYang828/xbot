@@ -1,5 +1,5 @@
 # XBot
-This is a chat bot for X.
+This is a chatbot for X.
 
 ## Quick Start
 
@@ -11,9 +11,15 @@ This is a chat bot for X.
 | NLU-joint-model | https://pan.baidu.com/s/1Uqb0Ci2HIlA-AhxnDq2-Mg | dnbr |
 | NLU-slot-model | https://pan.baidu.com/s/1RYlNIRJwc3vBFjdUxdcICA | pepd |
 
+## Documentation
+
 
 ## Architecture
 ![architecture](asset/xbot-architecture.png)
+
+## Dataset
+[CrossWOZ](https://arxiv.org/pdf/2002.11893.pdf)
+![](asset/crosswoz.jpg)
 
 ## Project Index
 ```

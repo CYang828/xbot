@@ -1,4 +1,7 @@
 transformers
-pytorch
+torch
 tensorflow
 numpy
+tqdm
+requests
+pytorch-lightning
