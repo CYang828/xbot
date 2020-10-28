@@ -2,3 +2,5 @@ transformers
 pytorch
 tensorflow
 numpy
+tqdm
+requests
