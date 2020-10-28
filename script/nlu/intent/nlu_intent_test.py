@@ -7,7 +7,7 @@ import torch
 from xbot.data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from xbot.xbot.nlu.intent.jointBERT import JointBERT
 from xbot.data.crosswoz.data_process.nlu_intent_postprocess import is_slot_da, calculateF1, recover_intent
-
+# test
 
 def set_seed(seed):
     random.seed(seed)
