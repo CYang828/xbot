@@ -4,9 +4,10 @@ from typing import Any
 
 from xbot.util.nlu_util import NLU
 from xbot.gl import DEFAULT_MODEL_PATH
+from xbot.util.path import get_root_path
+from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
-from xbot.util.download import download_from_url
 
 import torch
 from torch import nn
@@ -82,8 +83,7 @@ class IntentWithBertPredictor(NLU):
     def __init__(self, config_file='crosswoz_all_context.json',
                  model_file='https://convlab.blob.core.windows.net/convlab-2/bert_crosswoz_all_context.zip'):
         # path
-        current_path = os.path.abspath(os.path.dirname(__file__))
-        root_path = os.path.dirname(os.path.dirname(os.path.dirname(current_path)))
+        root_path = get_root_path()
         config_file = os.path.join(root_path, 'xbot/configs/{}'.format(config_file))
 
         # load config

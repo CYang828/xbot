@@ -1,5 +1,4 @@
 import os
-import errno
 from urllib.request import urlopen
 
 import requests

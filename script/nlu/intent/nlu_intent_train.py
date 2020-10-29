@@ -4,6 +4,7 @@ import random
 import zipfile
 
 from xbot.util.path import get_root_path
+from xbot.util.download import download_from_url
 from xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import calculate_f1, recover_intent
@@ -23,6 +24,9 @@ def set_seed(seed):
 
 
 if __name__ == '__main__':
+    data_urls = {'train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train_data.json',
+                 'val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/val_data.json',
+                 'test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test_data.json'}
     # load config
     root_path = get_root_path()
     config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context.json')
@@ -30,8 +34,16 @@ if __name__ == '__main__':
     data_path = config['data_dir']
     data_path = os.path.join(root_path, data_path)
     output_dir = config['output_dir']
+    output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
+    output_dir = os.path.join(root_path, log_dir)
     device = config['DEVICE']
+
+    # download data
+    for data_key, url in data_urls.items():
+        dst = os.path.join(os.path.join(data_path, data_key))
+        if not os.path.exists(dst):
+            download_from_url(url, dst)
 
     # seed
     set_seed(config['seed'])
@@ -80,9 +92,6 @@ if __name__ == '__main__':
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=config['model']['learning_rate'])
 
-    for name, param in model.named_parameters():
-        print(name, param.shape, param.device, param.requires_grad)
-
     max_step = config['model']['max_step']
     check_step = config['model']['check_step']
     batch_size = config['model']['batch_size']
@@ -106,6 +115,7 @@ if __name__ == '__main__':
         optimizer.step()
         if config['model']['finetune']:
             scheduler.step()  # Update learning rate schedule
+
         model.zero_grad()
         if step % check_step == 0:
             train_intent_loss = train_intent_loss / check_step
@@ -133,7 +143,6 @@ if __name__ == '__main__':
                         'golden': [x for x in labels]
                     })
 
-            
             total = len(dataloader.data['val'])
             val_intent_loss /= total
             print('%d samples val' % total)
@@ -141,7 +150,6 @@ if __name__ == '__main__':
 
             writer.add_scalar('intent_loss/train', train_intent_loss, global_step=step)
             writer.add_scalar('intent_loss/val', val_intent_loss, global_step=step)
-
 
             for x in ['intent']:
                 precision, recall, F1 = calculate_f1(predict_golden[x])
