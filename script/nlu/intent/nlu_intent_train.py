@@ -13,7 +13,6 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-# sys.path.append("F:/xbot")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 
 
@@ -23,43 +22,44 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-# parser = argparse.ArgumentParser(description="Train a model.")
-# parser.add_argument('--config_path',
-#                     help='path to config file')
-
-
 if __name__ == '__main__':
+    # load config
     root_path = get_root_path()
     config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context.json')
     config = json.load(open(config_path))
     data_path = config['data_dir']
     data_path = os.path.join(root_path, data_path)
-    print(root_path, data_path)
     output_dir = config['output_dir']
     log_dir = config['log_dir']
-    DEVICE = config['DEVICE']
+    device = config['DEVICE']
+
+    # seed
     set_seed(config['seed'])
 
+    # load intent vocabulary and dataloader
     intent_vocab = json.load(open(os.path.join(data_path, 'intent_vocab.json'), encoding="utf-8"))
-
     dataloader = Dataloader(intent_vocab=intent_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
 
+    # load data
     for data_key in ['train', 'val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_path, '{}_data.json'.format(data_key)), encoding="utf-8")), data_key,
-                             cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
+        dataloader.load_data(json.load(open(os.path.join(data_path, '{}_data.json'.format(data_key)),
+                                            encoding="utf-8")), data_key, cut_sen_len=config['cut_sen_len'],
+                             use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
+    # output and log dir
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-
     writer = SummaryWriter(log_dir)
 
-    model = IntentWithBert(config['model'], DEVICE, dataloader.intent_dim, dataloader.intent_weight)
-    model.to(DEVICE)
+    # model
+    model = IntentWithBert(config['model'], device, dataloader.intent_dim, dataloader.intent_weight)
+    model.to(device)
 
+    # optimizer and scheduler
     if config['model']['finetune']:
         no_decay = ['bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     for step in range(1, max_step + 1):
         model.train()
         batched_data = dataloader.get_train_batch(batch_size)
-        batched_data = tuple(t.to(DEVICE) for t in batched_data)
+        batched_data = tuple(t.to(device) for t in batched_data)
         word_seq_tensor, intent_tensor, word_mask_tensor = batched_data
         intent_logits, intent_loss = model.forward(word_seq_tensor, word_mask_tensor, intent_tensor)
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
             val_slot_loss, val_intent_loss = 0, 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key='val'):
-                pad_batch = tuple(t.to(DEVICE) for t in pad_batch)
+                pad_batch = tuple(t.to(device) for t in pad_batch)
                 word_seq_tensor, intent_tensor, word_mask_tensor = pad_batch
 
                 with torch.no_grad():
