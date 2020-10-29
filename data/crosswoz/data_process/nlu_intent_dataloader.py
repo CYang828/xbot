@@ -33,7 +33,7 @@ class Dataloader:
         self.data[data_key] = data
         max_sen_len, max_context_len = 0, 0
         sen_len = []  #存放所有数据的长度
-        context_len = []
+
         for d in self.data[data_key]:
             max_sen_len = max(max_sen_len, len(d[0]))
             sen_len.append(len(d[0]))
@@ -45,7 +45,7 @@ class Dataloader:
                 word_seq = d[0]
             d.append(word_seq)
             d.append(self.seq_intent2id(d[2]))
-            ##此处d：[分词之后的list，tag list，intent list，去除加号之后的intent list，问句，分词之后的list，intent id]
+            ##[list of words, list of tags, list of intents, original dialog act,问句，list of words, intent id]
             if data_key=='train':
                 for intent_id in d[-1]:
                     self.intent_weight[intent_id] += 1
@@ -57,8 +57,6 @@ class Dataloader:
             self.intent_weight = torch.tensor(self.intent_weight)
         print('max sen bert len', max_sen_len)
         print(sorted(Counter(sen_len).items()))
-        print('max context bert len', max_context_len)
-        print(sorted(Counter(context_len).items()))
 
     def bert_tokenize(self, word_seq):
         split_tokens = []

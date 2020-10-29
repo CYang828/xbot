@@ -4,9 +4,9 @@ import json
 import random
 import numpy as np
 import torch
-from xbot.data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from xbot.xbot.nlu.intent.jointBERT import JointBERT
-from xbot.data.crosswoz.data_process.nlu_intent_postprocess import is_slot_da, calculateF1, recover_intent
+from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
+from xbot.nlu.intent.jointBERT import JointBERT
+from data.crosswoz.data_process.nlu_intent_postprocess import is_slot_da, calculateF1, recover_intent
 
 def set_seed(seed):
     random.seed(seed)
@@ -14,24 +14,25 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-parser = argparse.ArgumentParser(description="Test a model.")
-parser.add_argument('--config_path',
-                    help='path to config file')
+# parser = argparse.ArgumentParser(description="Test a model.")
+# parser.add_argument('--config_path',
+#                     help='path to config file')
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    config = json.load(open(args.config_path))
+    # args = parser.parse_args()
+    config_path = "/xbot/xbot/configs/crosswoz_all_context.json"
+    config = json.load(open(config_path))
     data_dir = config['data_dir']
     output_dir = config['output_dir']
     log_dir = config['log_dir']
     DEVICE = config['DEVICE']
     set_seed(config['seed'])
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json')))
+    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab,pretrained_weights=config['model']['pretrained_weights'])
     print('intent num:', len(intent_vocab))
     for data_key in ['val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)))), data_key,
+        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)),encoding="utf-8")), data_key,
                              cut_sen_len=0, use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 

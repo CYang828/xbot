@@ -1,14 +1,14 @@
 import torch
 from torch import nn
 from transformers import BertModel
-
+from torch.nn.parameter import Parameter
 
 class JointBERT(nn.Module):
     def __init__(self, model_config, device, intent_dim, intent_weight=None):
         super(JointBERT, self).__init__()
         self.intent_num_labels = intent_dim
         self.device = device
-        self.intent_weight = intent_weight if intent_weight is not None else torch.tensor([1.]*intent_dim)
+        self.intent_weight = torch.tensor(intent_weight) if intent_weight is not None else torch.tensor([1.]*intent_dim)
 
         print(model_config['pretrained_weights'])
         self.bert = BertModel.from_pretrained(model_config['pretrained_weights'])
@@ -56,5 +56,6 @@ class JointBERT(nn.Module):
         if intent_tensor is not None:
             intent_loss = self.intent_loss_fct(intent_logits, intent_tensor)
 
-        return intent_logits, intent_loss
+        # return intent_logits, intent_loss   #训练的时候使用这行代码
+        return intent_logits  #预测的时候的返回值
 

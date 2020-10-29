@@ -7,10 +7,11 @@ import numpy as np
 import zipfile
 import torch
 from transformers import AdamW, get_linear_schedule_with_warmup
-from xbot.data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from xbot.xbot.nlu.intent.jointBERT import JointBERT
-from xbot.data.crosswoz.data_process.nlu_intent_postprocess import is_slot_da, calculateF1, recover_intent
-
+from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
+from xbot.nlu.intent.jointBERT import JointBERT
+from data.crosswoz.data_process.nlu_intent_postprocess import is_slot_da, calculateF1, recover_intent
+import sys
+sys.path.append("F:/xbot")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 
 def set_seed(seed):
@@ -26,16 +27,17 @@ def set_seed(seed):
 
 if __name__ == '__main__':
     # args = parser.parse_args()
-    config_path = "./configs/crosswoz_all_context.json"
+    # F:\xbot\xbot\configs\crosswoz_all_context.json
+    config_path = "/xbot/xbot/configs/crosswoz_all_context.json"
     config = json.load(open(config_path))
     data_dir = config['data_dir']
+    print(data_dir)
     output_dir = config['output_dir']
     log_dir = config['log_dir']
     DEVICE = config['DEVICE']
-
     set_seed(config['seed'])
 
-
+    #F:\xbot\data\crosswoz\nlu_intent_data\intent_vocab.json
     intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
 
     dataloader = Dataloader(intent_vocab=intent_vocab,
@@ -104,7 +106,6 @@ if __name__ == '__main__':
             scheduler.step()  # Update learning rate schedule
         model.zero_grad()
         if step % check_step == 0:
-            # train_slot_loss = train_slot_loss / check_step
             train_intent_loss = train_intent_loss / check_step
             print('[%d|%d] step' % (step, max_step))
             print('\t intent loss:', train_intent_loss)

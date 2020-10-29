@@ -72,8 +72,4 @@ def recover_intent(dataloader, intent_logits):
             intent, domain, slot, value = re.split('\+', dataloader.id2intent[j])
             das.append([intent, domain, slot, value])
 
-
-
-
-
     return das
