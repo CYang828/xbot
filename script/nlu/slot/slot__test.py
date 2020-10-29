@@ -11,13 +11,10 @@ import json
 import random
 import numpy as np
 import torch
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = curPath[:curPath.find("xbot\\")+len("xbot\\")]
 import sys
-sys.path.append(rootPath+'/xbot')
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from xbot.nlu.slot.slot_bert_model import JointBERT
-from data.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
+from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
 
 
 def set_seed(seed):
@@ -27,13 +24,16 @@ def set_seed(seed):
 
 
 parser = argparse.ArgumentParser(description="Test a model.")
-parser.add_argument('--config_path',
-                    help='path to config file')
+
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    config = json.load(open(args.config_path))
+    config_file = 'crosswoz_all_context_nlu_slot.json'
+    curPath = os.path.abspath(os.path.dirname(__file__))
+    rootPath = os.path.dirname(os.path.dirname(os.path.dirname(curPath)))
+    sys.path.append(rootPath)
+    config_path = os.path.join(rootPath, 'xbot/configs/{}'.format(config_file))
+    config = json.load(open(config_path))
     data_dir = config['data_dir']
     output_dir = config['output_dir']
     log_dir = config['log_dir']
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         os.makedirs(log_dir)
 
     model = JointBERT(config['model'], DEVICE, dataloader.tag_dim)
-    model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model.bin'), DEVICE))
+    model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model_nlu_slot.bin'), DEVICE))
     model.to(DEVICE)
     model.eval()
 

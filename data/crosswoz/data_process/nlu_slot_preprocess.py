@@ -18,7 +18,7 @@ def preprocess(mode):
     assert mode == 'all' or mode == 'usr' or mode == 'sys'
     cur_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(cur_dir,'raw')
-    processed_data_dir = os.path.join('slot_temp_data/{}_data'.format(mode))
+    processed_data_dir = os.path.join(cur_dir,'slot_temp_data/{}_data'.format(mode))
     if not os.path.exists(processed_data_dir):
         os.makedirs(processed_data_dir)
     data_key = ['train', 'val', 'test']
@@ -92,7 +92,7 @@ def preprocess(mode):
         all_tag = [x[0] for x in dict(Counter(all_tag)).items()]
         print('loaded {}, size {}'.format(key, len(processed_data[key])))
 
-        json.dump(processed_data[key], open(os.path.join(processed_data_dir, '{}_data.json'.format(key)), 'w', encoding='utf-8'),
+        json.dump(processed_data[key], open(os.path.join(processed_data_dir, 'slot_{}_data.json'.format(key)), 'w', encoding='utf-8'),
                   indent=2, ensure_ascii=False)
 
     print('sentence label num:', len(all_intent))

@@ -11,13 +11,10 @@ import json
 import random
 import numpy as np
 import torch
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = curPath[:curPath.find("xbot\\")+len("xbot\\")]
 import sys
-sys.path.append(rootPath)
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from xbot.nlu.slot.slot_bert_model import JointBERT
-from data.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
+from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
 
 
 def set_seed(seed):
@@ -26,14 +23,16 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-parser = argparse.ArgumentParser(description="Test a model.")
-parser.add_argument('--config_path',
-                    help='path to config file')
+
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    config = json.load(open(args.config_path))
+    config_file = 'crosswoz_all_context_nlu_slot.json'
+    curPath = os.path.abspath(os.path.dirname(__file__))
+    rootPath = os.path.dirname(os.path.dirname(os.path.dirname(curPath)))
+    sys.path.append(rootPath)
+    config_path = os.path.join(rootPath, 'xbot/configs/{}'.format(config_file))
+    config = json.load(open(config_path))
     data_dir = config['data_dir']
     output_dir = config['output_dir']
     log_dir = config['log_dir']
@@ -48,20 +47,19 @@ if __name__ == '__main__':
     tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'),encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
+
     print('intent num:', len(intent_vocab))
     print('tag num:', len(tag_vocab))
     for data_key in ['val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data_zjw.json'.format(data_key)),encoding="utf-8")), data_key,
+        dataloader.load_data(json.load(open(os.path.join(data_dir, 'slot_{}_data.json'.format(data_key)),encoding="utf-8")), data_key,
                              cut_sen_len=0, use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
 
     model = JointBERT(config['model'], DEVICE, dataloader.tag_dim)
-    model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model.bin'), DEVICE))
+    model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model_nlu_slot.pt'), DEVICE))
     model.to(DEVICE)
     model.eval()
 
@@ -77,11 +75,10 @@ if __name__ == '__main__':
             context_seq_tensor, context_mask_tensor = None, None
 
         with torch.no_grad():
-            slot_logits, batch_slot_loss = model.forward(word_seq_tensor,
+            slot_logits, batch_slot_loss = model(word_seq_tensor,
                                                          word_mask_tensor,
                                                          tag_seq_tensor,
                                                          tag_mask_tensor,
-
                                                          context_seq_tensor,
                                                          context_mask_tensor)
         slot_loss += batch_slot_loss.item() * real_batch_size

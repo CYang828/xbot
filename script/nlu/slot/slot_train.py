@@ -16,11 +16,10 @@ import torch
 from transformers import AdamW, get_linear_schedule_with_warmup
 import sys
 
-# base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# sys.path.append(base_dir)
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from xbot.nlu.slot.slot_bert_model import JointBERT
 from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
+
 
 def set_seed(seed):
     random.seed(seed)
@@ -28,14 +27,13 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-parser = argparse.ArgumentParser(description="Train a model.")
-parser.add_argument('--config_path',
-                    help='path to config file')
-
-
 if __name__ == '__main__':
-    args = parser.parse_args()
-    config = json.load(open(args.config_path))
+    config_file = 'crosswoz_all_context_nlu_slot.json'
+    curPath = os.path.abspath(os.path.dirname(__file__))
+    rootPath = os.path.dirname(os.path.dirname(os.path.dirname(curPath)))
+    sys.path.append(rootPath)
+    config_path = os.path.join(rootPath, 'xbot/configs/{}'.format(config_file))
+    config = json.load(open(config_path))
     data_dir = config['data_dir']
     output_dir = config['output_dir']
     log_dir = config['log_dir']
@@ -43,17 +41,15 @@ if __name__ == '__main__':
 
     set_seed(config['seed'])
 
-
-
-
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
-    tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'),encoding="utf-8"))
+    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'), encoding="utf-8"))
+    tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'), encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
     print('tag num:', len(tag_vocab))
     for data_key in ['train', 'val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data_zjw.json'.format(data_key)),encoding="utf-8")), data_key,
-                             cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
+        dataloader.load_data(
+            json.load(open(os.path.join(data_dir, 'slot_{}_data.json'.format(data_key)), encoding="utf-8")), data_key,
+            cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
     if not os.path.exists(output_dir):
@@ -63,8 +59,7 @@ if __name__ == '__main__':
 
     writer = SummaryWriter(log_dir)
 
-
-    model = JointBERT(config['model'], DEVICE, dataloader.tag_dim )
+    model = JointBERT(config['model'], DEVICE, dataloader.tag_dim)
     model.to(DEVICE)
 
     if config['model']['finetune']:
@@ -86,15 +81,11 @@ if __name__ == '__main__':
                 p.requires_grad = False
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=config['model']['learning_rate'])
-
-    for name, param in model.named_parameters():
-        print(name, param.shape, param.device, param.requires_grad)
-
     max_step = config['model']['max_step']
     check_step = config['model']['check_step']
     batch_size = config['model']['batch_size']
     model.zero_grad()
-    train_slot_loss=0
+    train_slot_loss = 0
     best_val_f1 = 0.
 
     writer.add_text('config', json.dumps(config))
@@ -104,15 +95,15 @@ if __name__ == '__main__':
         batched_data = dataloader.get_train_batch(batch_size)
 
         batched_data = tuple(t.to(DEVICE) for t in batched_data)
-        word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor,context_seq_tensor, context_mask_tensor = batched_data
+        word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = batched_data
         if not config['model']['context']:
             context_seq_tensor, context_mask_tensor = None, None
-        _, slot_loss = model.forward(word_seq_tensor,
-                                     word_mask_tensor,
-                                     tag_seq_tensor,
-                                     tag_mask_tensor,
-                                     context_seq_tensor,
-                                     context_mask_tensor )
+        _, slot_loss = model(word_seq_tensor,
+                             word_mask_tensor,
+                             tag_seq_tensor,
+                             tag_mask_tensor,
+                             context_seq_tensor,
+                             context_mask_tensor)
 
         train_slot_loss += slot_loss.item()
         loss = slot_loss
@@ -122,25 +113,26 @@ if __name__ == '__main__':
         if config['model']['finetune']:
             scheduler.step()  # Update learning rate schedule
         model.zero_grad()
-        if step % check_step == 0:
+        if step % check_step == 111111111110:
             train_slot_loss = train_slot_loss / check_step
             print('[%d|%d] step' % (step, max_step))
             print('\t slot loss:', train_slot_loss)
-            predict_golden = { 'slot': [], 'overall': []}
-            val_slot_loss= 0
+            predict_golden = {'slot': [], 'overall': []}
+            val_slot_loss = 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key='val'):
+
                 pad_batch = tuple(t.to(DEVICE) for t in pad_batch)
                 word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
                 if not config['model']['context']:
                     context_seq_tensor, context_mask_tensor = None, None
 
                 with torch.no_grad():
-                    slot_logits,  slot_loss = model.forward(word_seq_tensor,  word_mask_tensor,
-                                                            tag_seq_tensor,
-                                                            tag_mask_tensor,
-                                                            context_seq_tensor,
-                                                            context_mask_tensor)
+                    slot_logits, slot_loss = model(word_seq_tensor, word_mask_tensor,
+                                                   tag_seq_tensor,
+                                                   tag_mask_tensor,
+                                                   context_seq_tensor,
+                                                   context_mask_tensor)
                 val_slot_loss += slot_loss.item() * real_batch_size
                 for j in range(real_batch_size):
                     predicts = recover_intent(dataloader, slot_logits[j], tag_mask_tensor[j],
@@ -160,7 +152,6 @@ if __name__ == '__main__':
             writer.add_scalar('slot_loss/train', train_slot_loss, global_step=step)
             writer.add_scalar('slot_loss/val', val_slot_loss, global_step=step)
 
-
             precision, recall, F1 = calculateF1(predict_golden['slot'])
             print('-' * 20 + 'slot' + '-' * 20)
             print('\t Precision: %.2f' % (100 * precision))
@@ -173,18 +164,14 @@ if __name__ == '__main__':
 
             if F1 > best_val_f1:
                 best_val_f1 = F1
-                torch.save(model.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
+                torch.save(model.state_dict(), os.path.join(output_dir, 'pytorch_model_nlu_slot.pt'))
                 print('best val F1 %.4f' % best_val_f1)
                 print('save on', output_dir)
 
-            train_slot_loss= 0
+            train_slot_loss = 0
 
     writer.add_text('val overall F1', '%.2f' % (100 * best_val_f1))
     writer.close()
 
-    model_path = os.path.join(output_dir, 'pytorch_model.bin')
-    zip_path = config['zipped_model_path']
-    print('zip model to', zip_path)
-
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-        zf.write(model_path)
+    model_path = os.path.join(output_dir, 'pytorch_model_nlu_slot.pt')
+    torch.save(model.state_dict(), model_path)
