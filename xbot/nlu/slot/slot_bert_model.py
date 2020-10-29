@@ -68,7 +68,7 @@ class JointBERT(nn.Module):
         sequence_output = self.dropout(sequence_output)
         slot_logits = self.slot_classifier(sequence_output)
         outputs = (slot_logits,)
-        # pooled_output = self.dropout(pooled_output)
+        pooled_output = self.dropout(pooled_output)
         outputs= outputs
         if tag_seq_tensor is not None:
             active_tag_loss = tag_mask_tensor.view(-1) == 1
