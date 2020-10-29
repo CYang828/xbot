@@ -113,7 +113,7 @@ if __name__ == '__main__':
         if config['model']['finetune']:
             scheduler.step()  # Update learning rate schedule
         model.zero_grad()
-        if step % check_step == 111111111110:
+        if step % check_step == 0:
             train_slot_loss = train_slot_loss / check_step
             print('[%d|%d] step' % (step, max_step))
             print('\t slot loss:', train_slot_loss)
