@@ -1,24 +1,17 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2020/10/28 11:13 上午
-# @Author  : zhengjiawei
-# @FileName: slot_train.py
-# @Software: PyCharm
-
-
-import argparse
 import os
 import json
-from torch.utils.tensorboard import SummaryWriter
 import random
 import numpy as np
-import zipfile
-import torch
-from transformers import AdamW, get_linear_schedule_with_warmup
-import sys
 
+from xbot.util.path import get_root_path
+from xbot.util.download import download_from_url
+from xbot.nlu.slot.slot_with_bert import SlotWithBert
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
-from xbot.nlu.slot.slot_bert_model import JointBERT
 from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
+
+import torch
+from torch.utils.tensorboard import SummaryWriter
+from transformers import AdamW, get_linear_schedule_with_warmup
 
 
 def set_seed(seed):
@@ -28,39 +21,50 @@ def set_seed(seed):
 
 
 if __name__ == '__main__':
-    config_file = 'crosswoz_all_context_nlu_slot.json'
-    curPath = os.path.abspath(os.path.dirname(__file__))
-    rootPath = os.path.dirname(os.path.dirname(os.path.dirname(curPath)))
-    sys.path.append(rootPath)
-    config_path = os.path.join(rootPath, 'xbot/configs/{}'.format(config_file))
+    data_urls = {'train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train_data.json',
+                 'val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/val_data.json',
+                 'test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test_data.json'}
+
+    # load config
+    root_path = get_root_path()
+    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_slot.json')
     config = json.load(open(config_path))
-    data_dir = config['data_dir']
+    data_path = config['data_dir']
+    data_path = os.path.join(root_path, data_path)
     output_dir = config['output_dir']
+    output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
-    DEVICE = config['DEVICE']
+    output_dir = os.path.join(root_path, output_dir)
+    device = config['DEVICE']
+
+    # download data
+    for data_key, url in data_urls.items():
+        dst = os.path.join(os.path.join(data_path, data_key))
+        if not os.path.exists(dst):
+            download_from_url(url, dst)
 
     set_seed(config['seed'])
 
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'), encoding="utf-8"))
-    tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'), encoding="utf-8"))
+    intent_vocab = json.load(open(os.path.join(data_path, 'intent_vocab.json'), encoding="utf-8"))
+    tag_vocab = json.load(open(os.path.join(data_path, 'tag_vocab.json'), encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
-    print('tag num:', len(tag_vocab))
     for data_key in ['train', 'val', 'test']:
         dataloader.load_data(
-            json.load(open(os.path.join(data_dir, 'slot_{}_data.json'.format(data_key)), encoding="utf-8")), data_key,
+            json.load(open(os.path.join(data_path, 'slot_{}_data.json'.format(data_key)), encoding="utf-8")), data_key,
             cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
+    # output and log dir
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-
     writer = SummaryWriter(log_dir)
 
-    model = JointBERT(config['model'], DEVICE, dataloader.tag_dim)
-    model.to(DEVICE)
+    # model
+    model = SlotWithBert(config['model'], device, dataloader.tag_dim)
+    model.to(device)
 
     if config['model']['finetune']:
         no_decay = ['bias', 'LayerNorm.weight']
@@ -94,7 +98,7 @@ if __name__ == '__main__':
         model.train()
         batched_data = dataloader.get_train_batch(batch_size)
 
-        batched_data = tuple(t.to(DEVICE) for t in batched_data)
+        batched_data = tuple(t.to(device) for t in batched_data)
         word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = batched_data
         if not config['model']['context']:
             context_seq_tensor, context_mask_tensor = None, None
@@ -122,7 +126,7 @@ if __name__ == '__main__':
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key='val'):
 
-                pad_batch = tuple(t.to(DEVICE) for t in pad_batch)
+                pad_batch = tuple(t.to(device) for t in pad_batch)
                 word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
                 if not config['model']['context']:
                     context_seq_tensor, context_mask_tensor = None, None

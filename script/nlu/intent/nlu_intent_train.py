@@ -29,14 +29,14 @@ if __name__ == '__main__':
                  'test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test_data.json'}
     # load config
     root_path = get_root_path()
-    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context.json')
+    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_intent.json')
     config = json.load(open(config_path))
     data_path = config['data_dir']
     data_path = os.path.join(root_path, data_path)
     output_dir = config['output_dir']
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
-    output_dir = os.path.join(root_path, log_dir)
+    output_dir = os.path.join(root_path, output_dir)
     device = config['DEVICE']
 
     # download data

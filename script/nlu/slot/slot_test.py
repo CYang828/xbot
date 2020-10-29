@@ -13,7 +13,7 @@ import numpy as np
 import torch
 import sys
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
-from xbot.nlu.slot.slot_bert_model import JointBERT
+from xbot.nlu.slot.slot_with_bert import SlotWithBert
 from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
 
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    model = JointBERT(config['model'], DEVICE, dataloader.tag_dim)
+    model = SlotWithBert(config['model'], DEVICE, dataloader.tag_dim)
     model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model_nlu_slot.bin'), DEVICE))
     model.to(DEVICE)
     model.eval()

@@ -80,7 +80,7 @@ class IntentWithBert(nn.Module):
 class IntentWithBertPredictor(NLU):
     default_model_name = 'pytorch-intent-with-bert.bin'
 
-    def __init__(self, config_file='crosswoz_all_context.json',
+    def __init__(self, config_file='crosswoz_all_context_nlu_intent.json',
                  model_file='https://convlab.blob.core.windows.net/convlab-2/bert_crosswoz_all_context.zip'):
         # path
         root_path = get_root_path()
@@ -96,7 +96,7 @@ class IntentWithBertPredictor(NLU):
         dataloader = Dataloader(intent_vocab=intent_vocab,
                                 pretrained_weights=config['model']['pretrained_weights'])
         # load best model
-        best_model_path = os.path.join(DEFAULT_MODEL_PATH, 'pytorch-intent-with-bert.bin')
+        best_model_path = os.path.join(DEFAULT_MODEL_PATH, IntentWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
             download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.bin',
                               best_model_path)
@@ -133,7 +133,7 @@ class IntentWithBertPredictor(NLU):
 
 
 if __name__ == '__main__':
-    nlu = IntentWithBertPredictor(config_file='crosswoz_all_context.json',
+    nlu = IntentWithBertPredictor(config_file='crosswoz_all_context_nlu_intent.json',
                                   model_file='https://convlab.blob.core.windows.net/convlab-2/'
                                              'bert_crosswoz_all_context.zip')
     print(nlu.predict("北京布提克精品酒店酒店是什么类型，有健身房吗？"))
