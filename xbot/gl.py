@@ -1,1 +1,1 @@
-DEFAULT_MODEL_DST = '~/.xbot'
+DEFAULT_MODEL_PATH = '~/.xbot'
