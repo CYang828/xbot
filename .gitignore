@@ -5,3 +5,6 @@ data/crosswoz/nlu_intent_data/val_data.json
 data/crosswoz/nlu_intent_data/train_data.json
 log/*
 output/*
+build/
+xbot.egg-info/
+dist/
