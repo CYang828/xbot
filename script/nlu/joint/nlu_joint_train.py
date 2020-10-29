@@ -1,16 +1,18 @@
-import argparse
 import os
 import json
-from torch.utils.tensorboard import SummaryWriter
 import random
 import numpy as np
-import zipfile
-import torch
-import sys
-from transformers import AdamW, get_linear_schedule_with_warmup
+
+from xbot.util.path import get_root_path
+from xbot.util.download import download_from_url
+from xbot.nlu.joint.joint_with_bert import JointWithBert
 from data.crosswoz.data_process.nlu_dataloader import Dataloader
-from xbot.nlu.joint.jointBERT import JointBERT
 from data.crosswoz.data_process.nlu_postprocess import is_slot_da, calculateF1, recover_intent
+
+import torch
+from torch.utils.tensorboard import SummaryWriter
+from transformers import AdamW, get_linear_schedule_with_warmup
+
 
 def set_seed(seed):
     random.seed(seed)
@@ -18,48 +20,56 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-
-
-
 if __name__ == '__main__':
-    config_file = 'crosswoz_all_context.json'
-    curPath = os.path.abspath(os.path.dirname(__file__))
-    rootPath = os.path.dirname(os.path.dirname(os.path.dirname(curPath)))
-    sys.path.append(rootPath)
-    config_path = os.path.join(rootPath, 'xbot/configs/{}'.format(config_file))
+    data_urls = {'joint_train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/joint_train_data.json',
+                 'joint_val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/slot_val_data.json',
+                 'joint_test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/joint_test_data.json'}
+
+    # load config
+    root_path = get_root_path()
+    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_slot.json')
     config = json.load(open(config_path))
-    data_dir = config['data_dir']
+    data_path = config['data_dir']
+    data_path = os.path.join(root_path, data_path)
     output_dir = config['output_dir']
+    output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
-    DEVICE = config['DEVICE']
+    output_dir = os.path.join(root_path, output_dir)
+    device = config['DEVICE']
+
+    # download data
+    for data_key, url in data_urls.items():
+        dst = os.path.join(os.path.join(data_path, data_key))
+        if not os.path.exists(dst):
+            download_from_url(url, dst)
 
     set_seed(config['seed'])
 
-
-    ##经过preprocess处理之后，会产生intent_vocab，tag_vocab，train_data,test_data,val_data,数据集
-    #导入intent_vocab，tag_vocab数据集
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json')))
-    tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json')))
+    # 经过preprocess处理之后，会产生intent_vocab，tag_vocab，train_data,test_data,val_data,数据集
+    # 导入intent_vocab，tag_vocab数据集
+    intent_vocab = json.load(open(os.path.join(root_path, 'intent_vocab.json')))
+    tag_vocab = json.load(open(os.path.join(root_path, 'tag_vocab.json')))
 
     dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
-    print('intent num:', len(intent_vocab))
-    print('tag num:', len(tag_vocab))
-    #导入train_data,val_data,test_data数据集
+
+    # 导入train_data,val_data,test_data数据集
     for data_key in ['train', 'val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)))), data_key,
+        dataloader.load_data(json.load(open(os.path.join(root_path, '{}_data.json'.format(data_key)))), data_key,
                              cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    writer = SummaryWriter(log_dir)
-    #导入模型
-    model = JointBERT(config['model'], DEVICE, dataloader.tag_dim, dataloader.intent_dim, dataloader.intent_weight)
-    model.to(DEVICE)
 
-    #判断是否进行finetune
+    writer = SummaryWriter(log_dir)
+    # 导入模型
+    model = JointWithBert(config['model'], device, dataloader.tag_dim, dataloader.intent_dim, dataloader.intent_weight)
+    model.to(device)
+
+    # 判断是否进行finetune
     if config['model']['finetune']:
         no_decay = ['bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
@@ -94,23 +104,24 @@ if __name__ == '__main__':
 
     for step in range(1, max_step + 1):
         model.train()
-        batched_data = dataloader.get_train_batch(batch_size)#随机获得batch_size个样本,
-        #因为在调用get_train_batch的时候，需要调用pad_batch，所以得到的输出是7维的
-        batched_data = tuple(t.to(DEVICE) for t in batched_data)
+        batched_data = dataloader.get_train_batch(batch_size)  # 随机获得batch_size个样本,
+        # 因为在调用get_train_batch的时候，需要调用pad_batch，所以得到的输出是7维的
+        batched_data = tuple(t.to(device) for t in batched_data)
         word_seq_tensor, tag_seq_tensor, intent_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = batched_data
         if not config['model']['context']:
             context_seq_tensor, context_mask_tensor = None, None
         _, _, slot_loss, intent_loss = model(word_seq_tensor, word_mask_tensor, tag_seq_tensor, tag_mask_tensor,
-                                                     intent_tensor, context_seq_tensor, context_mask_tensor)
+                                             intent_tensor, context_seq_tensor, context_mask_tensor)
         train_slot_loss += slot_loss.item()
         train_intent_loss += intent_loss.item()
-        loss = slot_loss + intent_loss #将slot_loss和intent_loss直接相加
+        loss = slot_loss + intent_loss  # 将slot_loss和intent_loss直接相加
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)#进行梯度裁剪，防止梯度爆炸
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)  # 进行梯度裁剪，防止梯度爆炸
         optimizer.step()
         if config['model']['finetune']:
-            scheduler.step()  # Update learning rate schedule
-        model.zero_grad() #
+            # Update learning rate schedule
+            scheduler.step()
+        model.zero_grad()  #
         if step % check_step == 0:
             train_slot_loss = train_slot_loss / check_step
             train_intent_loss = train_intent_loss / check_step
@@ -123,7 +134,7 @@ if __name__ == '__main__':
             val_slot_loss, val_intent_loss = 0, 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key='val'):
-                pad_batch = tuple(t.to(DEVICE) for t in pad_batch)
+                pad_batch = tuple(t.to(device) for t in pad_batch)
                 word_seq_tensor, tag_seq_tensor, intent_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
                 if not config['model']['context']:
                     context_seq_tensor, context_mask_tensor = None, None

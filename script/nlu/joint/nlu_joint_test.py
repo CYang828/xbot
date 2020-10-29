@@ -1,23 +1,20 @@
-import argparse
+import sys
 import os
 import json
 import random
 import numpy as np
-import torch
-import sys
+
+from xbot.nlu.joint.joint_with_bert import JointWithBert
 from data.crosswoz.data_process.nlu_dataloader import Dataloader
-from xbot.nlu.joint.jointBERT import JointBERT
 from data.crosswoz.data_process.nlu_postprocess import is_slot_da, calculateF1, recover_intent
+
+import torch
+
 
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-
-
-parser = argparse.ArgumentParser(description="Test a model.")
-parser.add_argument('--config_path',
-                    help='path to config file')
 
 
 if __name__ == '__main__':
@@ -48,7 +45,7 @@ if __name__ == '__main__':
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    model = JointBERT(config['model'], DEVICE, dataloader.tag_dim, dataloader.intent_dim)
+    model = JointWithBert(config['model'], DEVICE, dataloader.tag_dim, dataloader.intent_dim)
     model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model_nlu.pt'), DEVICE))
     model.to(DEVICE)
     model.eval()

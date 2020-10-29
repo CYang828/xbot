@@ -28,7 +28,8 @@ setup(
     version=version,
     include_package_data=True,
     packages=find_packages(),
-    package_data={'xbot': ['config/*']},
+    package_data={'xbot': ['config/crosswoz_all_context_nlu_intent.json',
+                           'config/crosswoz_all_context_nlu_slot.json']},
     entry_points={
         'console_scripts': [
         ],
