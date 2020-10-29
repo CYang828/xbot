@@ -14,11 +14,9 @@ def read_zipped_json(filepath, filename):
 
 def preprocess(mode):
     assert mode == 'all' or mode == 'usr' or mode == 'sys'
-
-    # path
-    cur_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(cur_dir, '..')
-    processed_data_dir = os.path.join(cur_dir, '../../../xbot/data/{}_data'.format(mode))
+    cur_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_dir = os.path.join(cur_dir,'raw')
+    processed_data_dir = os.path.join(cur_dir,'nlu_temp_data/{}_data'.format(mode))
     if not os.path.exists(processed_data_dir):
         os.makedirs(processed_data_dir)
 
@@ -113,4 +111,4 @@ def preprocess(mode):
 
 if __name__ == '__main__':
     # dialogue role: all, usr, sys
-    preprocess(sys.argv[1])
+    preprocess('all')
