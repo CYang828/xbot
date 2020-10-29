@@ -5,9 +5,10 @@ import torch
 from xbot.util.file_util import cached_path
 from xbot.util.nlu_util import NLU
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from xbot.nlu.intent.jointBERT import JointBERT
+from xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
-import sys
+
+
 class BERTNLU(NLU):
     def __init__(self, config_file='crosswoz_all_context.json',
                  model_file='https://convlab.blob.core.windows.net/convlab-2/bert_crosswoz_all_context.zip'):
@@ -21,18 +22,17 @@ class BERTNLU(NLU):
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_dir = os.path.join(root_dir, config['data_dir'])
         output_dir = os.path.join(root_dir, config['output_dir'])
-        print("data_dir",data_dir)
-        print("output_dir",output_dir)
+        print("data_dir", data_dir)
+        print("output_dir", output_dir)
 
         # if not os.path.exists(os.path.join(data_dir, 'intent_vocab.json')):
         #     preprocess(mode)
 
-        intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding='utf-8'))
+        intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'), encoding='utf-8'))
         dataloader = Dataloader(intent_vocab=intent_vocab,
                                 pretrained_weights=config['model']['pretrained_weights'])
 
         print('intent num:', len(intent_vocab))
-
 
         best_model_path = os.path.join(output_dir, 'pytorch_model.bin')
         if not os.path.exists(best_model_path):
@@ -44,7 +44,7 @@ class BERTNLU(NLU):
             archive.extractall(root_dir)
             archive.close()
         print('Load from', best_model_path)
-        model = JointBERT(config['model'], DEVICE, dataloader.intent_dim)
+        model = IntentWithBert(config['model'], DEVICE, dataloader.intent_dim)
         try:
             model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model.bin'), map_location='cpu'))
         except Exception as e:
@@ -70,6 +70,8 @@ class BERTNLU(NLU):
         intent = recover_intent(self.dataloader, intent_logits[0])
         return intent
 
+
 if __name__ == '__main__':
-    nlu = BERTNLU(config_file='crosswoz_all_context.json',model_file='https://convlab.blob.core.windows.net/convlab-2/bert_crosswoz_all_context.zip')
+    nlu = BERTNLU(config_file='crosswoz_all_context.json',
+                  model_file='https://convlab.blob.core.windows.net/convlab-2/bert_crosswoz_all_context.zip')
     print(nlu.predict("北京布提克精品酒店酒店是什么类型，有健身房吗？"))

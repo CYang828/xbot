@@ -5,3 +5,5 @@ numpy
 tqdm
 requests
 pytorch-lightning
+boto3
+botocore
