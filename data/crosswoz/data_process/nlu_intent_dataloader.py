@@ -13,7 +13,7 @@ class Dataloader:
         :param tag_vocab: list of all tags
         :param pretrained_weights: which bert, e.g. 'bert-base-uncased'
         """
-        self.intent_vocab = intent_vocab  #len(intent_vocab)
+        self.intent_vocab = intent_vocab  # len(intent_vocab)
         self.intent_dim = len(intent_vocab)
         self.id2intent = dict([(i, x) for i, x in enumerate(intent_vocab)])
         self.intent2id = dict([(x, i) for i, x in enumerate(intent_vocab)])
@@ -26,18 +26,20 @@ class Dataloader:
         cut_sen_len参数在配置文件里进行配置
         use_bert_tokenizer 参数在配置文件里
         sample representation: [list of words, list of tags, list of intents, original dialog act]
+        :param use_bert_tokenizer:
+        :param cut_sen_len:
         :param data_key: train/val/test
         :param data:
         :return:
         """
         self.data[data_key] = data
         max_sen_len, max_context_len = 0, 0
-        sen_len = []  #存放所有数据的长度
+        sen_len = []  # 存放所有数据的长度
 
         for d in self.data[data_key]:
             max_sen_len = max(max_sen_len, len(d[0]))
             sen_len.append(len(d[0]))
-            if cut_sen_len > 0: #对每条数据进行长度的截取
+            if cut_sen_len > 0:  # 对每条数据进行长度的截取
                 d[0] = d[0][:cut_sen_len]
             if use_bert_tokenizer:
                 word_seq = self.bert_tokenize(d[0])
@@ -45,8 +47,8 @@ class Dataloader:
                 word_seq = d[0]
             d.append(word_seq)
             d.append(self.seq_intent2id(d[2]))
-            ##[list of words, list of tags, list of intents, original dialog act,问句，list of words, intent id]
-            if data_key=='train':
+            # [list of words, list of tags, list of intents, original dialog act,问句，list of words, intent id]
+            if data_key == 'train':
                 for intent_id in d[-1]:
                     self.intent_weight[intent_id] += 1
         if data_key == 'train':
@@ -86,7 +88,7 @@ class Dataloader:
         word_mask_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         word_seq_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
 
-        intent_tensor = torch.zeros((batch_size, self.intent_dim), dtype=torch.float)#
+        intent_tensor = torch.zeros((batch_size, self.intent_dim), dtype=torch.float)  #
 
         for i in range(batch_size):
             words = batch_data[i][-2]
@@ -100,7 +102,6 @@ class Dataloader:
 
             for j in intents:
                 intent_tensor[i, j] = 1.
-
 
         return word_seq_tensor, intent_tensor, word_mask_tensor
 

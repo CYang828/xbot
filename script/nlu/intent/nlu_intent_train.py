@@ -1,18 +1,21 @@
-import argparse
 import os
 import json
-from torch.utils.tensorboard import SummaryWriter
 import random
-import numpy as np
 import zipfile
-import torch
-from transformers import AdamW, get_linear_schedule_with_warmup
+
+from xbot.util.path import get_root_path
+from xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from xbot.nlu.intent.jointBERT import JointBERT
-from data.crosswoz.data_process.nlu_intent_postprocess import is_slot_da, calculateF1, recover_intent
-import sys
-sys.path.append("F:/xbot")
+from data.crosswoz.data_process.nlu_intent_postprocess import calculate_f1, recover_intent
+
+import torch
+import numpy as np
+from torch.utils.tensorboard import SummaryWriter
+from transformers import AdamW, get_linear_schedule_with_warmup
+
+# sys.path.append("F:/xbot")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
+
 
 def set_seed(seed):
     random.seed(seed)
@@ -26,25 +29,24 @@ def set_seed(seed):
 
 
 if __name__ == '__main__':
-    # args = parser.parse_args()
-    # F:\xbot\xbot\configs\crosswoz_all_context.json
-    config_path = "/xbot/xbot/configs/crosswoz_all_context.json"
+    root_path = get_root_path()
+    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context.json')
     config = json.load(open(config_path))
-    data_dir = config['data_dir']
-    print(data_dir)
+    data_path = config['data_dir']
+    data_path = os.path.join(root_path, data_path)
+    print(root_path, data_path)
     output_dir = config['output_dir']
     log_dir = config['log_dir']
     DEVICE = config['DEVICE']
     set_seed(config['seed'])
 
-    #F:\xbot\data\crosswoz\nlu_intent_data\intent_vocab.json
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
+    intent_vocab = json.load(open(os.path.join(data_path, 'intent_vocab.json'), encoding="utf-8"))
 
     dataloader = Dataloader(intent_vocab=intent_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
 
     for data_key in ['train', 'val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)),encoding="utf-8")), data_key,
+        dataloader.load_data(json.load(open(os.path.join(data_path, '{}_data.json'.format(data_key)), encoding="utf-8")), data_key,
                              cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
@@ -55,7 +57,7 @@ if __name__ == '__main__':
 
     writer = SummaryWriter(log_dir)
 
-    model = JointBERT(config['model'], DEVICE, dataloader.intent_dim, dataloader.intent_weight)
+    model = IntentWithBert(config['model'], DEVICE, dataloader.intent_dim, dataloader.intent_weight)
     model.to(DEVICE)
 
     if config['model']['finetune']:
@@ -142,7 +144,7 @@ if __name__ == '__main__':
 
 
             for x in ['intent']:
-                precision, recall, F1 = calculateF1(predict_golden[x])
+                precision, recall, F1 = calculate_f1(predict_golden[x])
                 print('-' * 20 + x + '-' * 20)
                 print('\t Precision: %.2f' % (100 * precision))
                 print('\t Recall: %.2f' % (100 * recall))

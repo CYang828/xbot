@@ -1,5 +1,4 @@
 import re
-import torch
 
 
 def is_slot_da(da):
@@ -10,28 +9,27 @@ def is_slot_da(da):
     return False
 
 
-def calculateF1(predict_golden):
-    TP, FP, FN = 0, 0, 0
+def calculate_f1(predict_golden):
+    tp, fp, fn = 0, 0, 0
     for item in predict_golden:
         predicts = item['predict']
         labels = item['golden']
         for ele in predicts:
             if ele in labels:
-                TP += 1
+                tp += 1
             else:
-                FP += 1
+                fp += 1
         for ele in labels:
             if ele not in predicts:
-                FN += 1
-    # print(TP, FP, FN)
-    precision = 1.0 * TP / (TP + FP) if TP + FP else 0.
-    recall = 1.0 * TP / (TP + FN) if TP + FN else 0.
-    F1 = 2.0 * precision * recall / (precision + recall) if precision + recall else 0.
-    return precision, recall, F1
+                fn += 1
+    precision = 1.0 * tp / (tp + fp) if tp + fp else 0.
+    recall = 1.0 * tp / (tp + fn) if tp + fn else 0.
+    f1 = 2.0 * precision * recall / (precision + recall) if precision + recall else 0.
+    return precision, recall, f1
 
 
 def tag2das(word_seq, tag_seq):
-    assert len(word_seq)==len(tag_seq)
+    assert len(word_seq) == len(tag_seq)
     das = []
     i = 0
     while i < len(tag_seq):
@@ -59,17 +57,16 @@ def tag2das(word_seq, tag_seq):
 def intent2das(intent_seq):
     triples = []
     for intent in intent_seq:
-        intent, domain, slot, value = re.split('\+', intent)
+        intent, domain, slot, value = re.split(r'\+', intent)
         triples.append([intent, domain, slot, value])
     return triples
 
 
 def recover_intent(dataloader, intent_logits):
-
     das = []
     for j in range(dataloader.intent_dim):
         if intent_logits[j] > 0:
-            intent, domain, slot, value = re.split('\+', dataloader.id2intent[j])
+            intent, domain, slot, value = re.split(r'\+', dataloader.id2intent[j])
             das.append([intent, domain, slot, value])
 
     return das
