@@ -1,5 +1,4 @@
 .idea/*
-*.json
 *.log
 data/crosswoz/nlu_intent_data/test_data.json
 data/crosswoz/nlu_intent_data/val_data.json
