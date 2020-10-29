@@ -14,7 +14,7 @@ import torch
 import sys
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from xbot.nlu.slot.slot_with_bert import SlotWithBert
-from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
+from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculate_f1, recover_intent
 
 
 def set_seed(seed):
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     total = len(dataloader.data[data_key])
     slot_loss /= total
 
-    precision, recall, F1 = calculateF1(predict_golden['slot'])
+    precision, recall, F1 = calculate_f1(predict_golden['slot'])
     print('-' * 20 + 'slot' + '-' * 20)
     print('\t Precision: %.2f' % (100 * precision))
     print('\t Recall: %.2f' % (100 * recall))

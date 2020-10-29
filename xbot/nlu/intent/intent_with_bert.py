@@ -15,7 +15,7 @@ from transformers import BertModel
 
 
 class IntentWithBert(nn.Module):
-    """Bert Intent Classification"""
+    """Intent Classification with Bert"""
 
     def _forward_unimplemented(self, *input: Any) -> None:
         pass
@@ -78,10 +78,9 @@ class IntentWithBert(nn.Module):
 
 
 class IntentWithBertPredictor(NLU):
-    default_model_name = 'pytorch-intent-with-bert.bin'
+    default_model_name = 'pytorch-intent-with-bert.pt'
 
-    def __init__(self, config_file='crosswoz_all_context_nlu_intent.json',
-                 model_file='https://convlab.blob.core.windows.net/convlab-2/bert_crosswoz_all_context.zip'):
+    def __init__(self, config_file='crosswoz_all_context_nlu_intent.json'):
         # path
         root_path = get_root_path()
         config_file = os.path.join(root_path, 'xbot/configs/{}'.format(config_file))
@@ -98,11 +97,12 @@ class IntentWithBertPredictor(NLU):
         # load best model
         best_model_path = os.path.join(DEFAULT_MODEL_PATH, IntentWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
-            download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.bin',
+            download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.pt',
                               best_model_path)
         model = IntentWithBert(config['model'], device, dataloader.intent_dim)
         try:
-            model.load_state_dict(torch.load(os.path.join(DEFAULT_MODEL_PATH, 'pytorch-intent-with-bert.bin'),
+            model.load_state_dict(torch.load(os.path.join(DEFAULT_MODEL_PATH,
+                                                          IntentWithBertPredictor.default_model_name),
                                              map_location='cpu'))
         except Exception as e:
             print(e)
@@ -133,7 +133,5 @@ class IntentWithBertPredictor(NLU):
 
 
 if __name__ == '__main__':
-    nlu = IntentWithBertPredictor(config_file='crosswoz_all_context_nlu_intent.json',
-                                  model_file='https://convlab.blob.core.windows.net/convlab-2/'
-                                             'bert_crosswoz_all_context.zip')
+    nlu = IntentWithBertPredictor(config_file='crosswoz_all_context_nlu_intent.json')
     print(nlu.predict("北京布提克精品酒店酒店是什么类型，有健身房吗？"))

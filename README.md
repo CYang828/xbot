@@ -2,14 +2,25 @@
 This is a chatbot for X.
 
 ## Quick Start
+```
+git clone https://github.com/BSlience/xbot.git
+```
 
+### NLU
+```
+# intent classification
+cd xbot/ && python xbot/nlu/intent/intent_with_bert.py
+# slot extraction
+cd xbot/ && python xbot/slot/slot_with_bert.py
+# nlu-joint
+cd xbot/ && python xbot/joint/joint_with_bert.py
+```
 
-## Pretrain Model 
+### DST
 
-| Type | URL | Password |
-| --- | --- | --- | 
-| NLU-joint-model | https://pan.baidu.com/s/1Uqb0Ci2HIlA-AhxnDq2-Mg | dnbr |
-| NLU-slot-model | https://pan.baidu.com/s/1RYlNIRJwc3vBFjdUxdcICA | pepd |
+### DP
+
+### NLG
 
 ## Documentation
 

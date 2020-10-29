@@ -15,6 +15,8 @@ from transformers import BertModel
 
 
 class SlotWithBert(nn.Module):
+    """Slot Extraction with Bert"""
+
     def _forward_unimplemented(self, *input: Any) -> None:
         pass
 

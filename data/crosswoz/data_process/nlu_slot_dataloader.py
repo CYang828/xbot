@@ -4,12 +4,10 @@
 # @FileName: nlu_slot_dataloader.py
 # @Software: PyCharm
 
-import numpy as np
 import torch
 import random
 from transformers import BertTokenizer
 import math
-from collections import Counter
 
 
 class Dataloader:
@@ -37,7 +35,7 @@ class Dataloader:
         sen_len = []
         context_len = []
         for d in self.data[data_key]:
-            max_sen_len = max(max_sen_len, len(d[0]))#计算最大句子长度
+            max_sen_len = max(max_sen_len, len(d[0]))  # 计算最大句子长度
             sen_len.append(len(d[0]))
             if cut_sen_len > 0:
                 d[0] = d[0][:cut_sen_len]
@@ -57,7 +55,6 @@ class Dataloader:
             d.append(new2ori)
             d.append(word_seq)
             d.append(self.seq_tag2id(tag_seq))
-
 
     def bert_tokenize(self, word_seq, tag_seq):
         split_tokens = []
@@ -93,7 +90,7 @@ class Dataloader:
 
     def pad_batch(self, batch_data):
         batch_size = len(batch_data)
-        max_seq_len  = max([len(x[0]) for x in batch_data]) + 2
+        max_seq_len = max([len(x[0]) for x in batch_data]) + 2
         word_mask_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         word_seq_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         tag_mask_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
@@ -108,15 +105,15 @@ class Dataloader:
             indexed_tokens = self.tokenizer.convert_tokens_to_ids(words)
             sen_len = len(words)
             word_seq_tensor[i, :sen_len] = torch.LongTensor([indexed_tokens])
-            tag_seq_tensor[i, 1:sen_len-1] = torch.LongTensor(tags)
+            tag_seq_tensor[i, 1:sen_len - 1] = torch.LongTensor(tags)
             word_mask_tensor[i, :sen_len] = torch.LongTensor([1] * sen_len)
-            tag_mask_tensor[i, 1:sen_len-1] = torch.LongTensor([1] * (sen_len-2))
+            tag_mask_tensor[i, 1:sen_len - 1] = torch.LongTensor([1] * (sen_len - 2))
             context_len = len(batch_data[i][3])
 
             context_seq_tensor[i, :context_len] = torch.LongTensor([batch_data[i][3]])
             context_mask_tensor[i, :context_len] = torch.LongTensor([1] * context_len)
 
-        return word_seq_tensor, tag_seq_tensor,  word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor
+        return word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor
 
     def get_train_batch(self, batch_size):
         batch_data = random.choices(self.data['train'], k=batch_size)

@@ -7,7 +7,7 @@ from xbot.util.path import get_root_path
 from xbot.util.download import download_from_url
 from xbot.nlu.slot.slot_with_bert import SlotWithBert
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
-from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculateF1, recover_intent
+from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculate_f1, recover_intent
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -156,7 +156,7 @@ if __name__ == '__main__':
             writer.add_scalar('slot_loss/train', train_slot_loss, global_step=step)
             writer.add_scalar('slot_loss/val', val_slot_loss, global_step=step)
 
-            precision, recall, F1 = calculateF1(predict_golden['slot'])
+            precision, recall, F1 = calculate_f1(predict_golden['slot'])
             print('-' * 20 + 'slot' + '-' * 20)
             print('\t Precision: %.2f' % (100 * precision))
             print('\t Recall: %.2f' % (100 * recall))
