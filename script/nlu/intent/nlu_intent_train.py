@@ -33,7 +33,7 @@ if __name__ == '__main__':
     output_dir = config['output_dir']
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
-    output_dir = os.path.join(root_path, output_dir)
+    log_dir = os.path.join(root_path, log_dir)
     device = config['DEVICE']
 
     # download data
