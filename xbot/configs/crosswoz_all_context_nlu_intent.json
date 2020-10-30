@@ -13,7 +13,7 @@
     "context_grad": true,
     "pretrained_weights": "hfl/chinese-bert-wwm-ext",
     "check_step": 1,
-    "max_step": 2,
+    "max_step": 40000,
     "batch_size": 5,
     "learning_rate": 3e-5,
     "adam_epsilon": 1e-8,
