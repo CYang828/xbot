@@ -3,7 +3,7 @@ import json
 import random
 import zipfile
 
-from xbot.util.path import get_root_path
+from xbot.util.path import get_root_path, get_config_path
 from xbot.util.download import download_from_url
 from xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
@@ -27,7 +27,7 @@ if __name__ == '__main__':
                  'intent_test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json'}
     # load config
     root_path = get_root_path()
-    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_intent.json')
+    config_path = os.path.join(get_config_path(), 'crosswoz_all_context_nlu_intent.json')
     config = json.load(open(config_path))
     data_path = config['data_dir']
     data_path = os.path.join(root_path, data_path)
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     # load data
     for data_key in ['train', 'val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_path, '{}_data.json'.format(data_key)),
+        dataloader.load_data(json.load(open(os.path.join(data_path, 'intent_{}_data.json'.format(data_key)),
                                             encoding="utf-8")), data_key, cut_sen_len=config['cut_sen_len'],
                              use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
