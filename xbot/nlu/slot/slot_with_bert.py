@@ -97,13 +97,17 @@ class SlotWithBert(nn.Module):
 
 
 class SlotWithBertPredictor(NLU):
-    default_model_name = 'pytorch_model_nlu_slot.pt'
+    """NLU slot Extraction with Bert 预测器"""
 
-    def __init__(self, config_file='crosswoz_all_context_nlu_slot.json',
-                 model_file='https://convlab.blob.core.windows.net/convlab-2/bert_crosswoz_all_context.zip'):
+    default_model_config = 'crosswoz_all_context_nlu_slot.json'
+    default_model_name = 'pytorch_slot_with_bert.pt'
+    default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_slot_with_bert.pt'
+
+    def __init__(self):
         # path
         root_path = get_root_path()
-        config_file = os.path.join(root_path, 'xbot/configs/{}'.format(config_file))
+        config_file = os.path.join(root_path,
+                                   'xbot/configs/{}'.format(SlotWithBertPredictor.default_model_config))
 
         # load config
         config = json.load(open(config_file))
@@ -118,11 +122,12 @@ class SlotWithBertPredictor(NLU):
         # load best model
         best_model_path = os.path.join(DEFAULT_MODEL_PATH, SlotWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
-            download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.bin',
+            download_from_url(SlotWithBertPredictor.default_model_url,
                               best_model_path)
         model = SlotWithBert(config['model'], device, dataloader.tag_dim)
         try:
-            model.load_state_dict(torch.load(os.path.join(DEFAULT_MODEL_PATH, 'pytorch_model_nlu_slot.pt'),
+            model.load_state_dict(torch.load(os.path.join(DEFAULT_MODEL_PATH,
+                                                          SlotWithBertPredictor.default_model_name),
                                              map_location='cpu'))
         except Exception as e:
             print(e)
@@ -161,8 +166,6 @@ class SlotWithBertPredictor(NLU):
 
 
 if __name__ == '__main__':
-    slot = SlotWithBertPredictor(config_file='crosswoz_all_context_nlu_slot.json',
-                                 model_file='https://convlab.blob.core.windows.net/'
-                                            'convlab-2/bert_crosswoz_all_context.zip')
+    slot = SlotWithBertPredictor()
     print(slot.predict(utterance="北京布提克精品酒店酒店是什么类型，有健身房吗？",
                        context=['你好，给我推荐一个评分是5分，价格在100-200元的酒店。', '推荐您去北京布提克精品酒店。']))

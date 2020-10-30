@@ -78,12 +78,17 @@ class IntentWithBert(nn.Module):
 
 
 class IntentWithBertPredictor(NLU):
-    default_model_name = 'pytorch-intent-with-bert.pt'
+    """NLU Intent Classification with Bert 预测器"""
 
-    def __init__(self, config_file='crosswoz_all_context_nlu_intent.json'):
+    default_model_config = 'crosswoz_all_context_nlu_intent.json'
+    default_model_name = 'pytorch-intent-with-bert.pt'
+    default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.pt'
+
+    def __init__(self):
         # path
         root_path = get_root_path()
-        config_file = os.path.join(root_path, 'xbot/configs/{}'.format(config_file))
+        config_file = os.path.join(root_path,
+                                   'xbot/configs/{}'.format(IntentWithBertPredictor.default_model_config))
 
         # load config
         config = json.load(open(config_file))
@@ -97,7 +102,7 @@ class IntentWithBertPredictor(NLU):
         # load best model
         best_model_path = os.path.join(DEFAULT_MODEL_PATH, IntentWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
-            download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.pt',
+            download_from_url(IntentWithBertPredictor.default_model_url,
                               best_model_path)
         model = IntentWithBert(config['model'], device, dataloader.intent_dim)
         try:
@@ -133,5 +138,5 @@ class IntentWithBertPredictor(NLU):
 
 
 if __name__ == '__main__':
-    nlu = IntentWithBertPredictor(config_file='crosswoz_all_context_nlu_intent.json')
+    nlu = IntentWithBertPredictor()
     print(nlu.predict("北京布提克精品酒店酒店是什么类型，有健身房吗？"))

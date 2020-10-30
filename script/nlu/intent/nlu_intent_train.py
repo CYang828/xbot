@@ -14,8 +14,6 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-# os.environ["CUDA_VISIBLE_DEVICES"]='1'
-
 
 def set_seed(seed):
     random.seed(seed)
@@ -24,9 +22,9 @@ def set_seed(seed):
 
 
 if __name__ == '__main__':
-    data_urls = {'train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train_data.json',
-                 'val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/val_data.json',
-                 'test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test_data.json'}
+    data_urls = {'intent_train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json',
+                 'intent_val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json',
+                 'intent_test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json'}
     # load config
     root_path = get_root_path()
     config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_intent.json')

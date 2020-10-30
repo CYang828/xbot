@@ -1,6 +1,5 @@
 import os
 import json
-import zipfile
 from typing import Any
 
 from xbot.util.nlu_util import NLU
@@ -124,11 +123,14 @@ class JointWithBert(nn.Module):
 
 class JointWithBertPredictor(NLU):
     """NLU Joint with Bert 预测器"""
-    def __init__(self, mode='all', config_file='crosswoz_all_context.json'):
-        assert mode == 'usr' or mode == 'sys' or mode == 'all'
 
+    default_model_config = 'crosswoz_all_context_joint_nlu.json'
+    default_model_name = 'pytorch-joint-with-bert.pt'
+    default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_joint_with_bert.pt'
+
+    def __init__(self):
         root_path = get_root_path()
-        config_file = os.path.join(root_path, 'xbot/configs/{}'.format(config_file))
+        config_file = os.path.join(root_path, 'xbot/configs/{}'.format(JointWithBertPredictor.default_model_config))
         config = json.load(open(config_file))
         device = config['DEVICE']
         data_dir = os.path.join(root_path, config['data_dir'])
@@ -139,14 +141,16 @@ class JointWithBertPredictor(NLU):
         dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                                 pretrained_weights=config['model']['pretrained_weights'])
 
-        best_model_path = os.path.join(output_dir, 'pytorch_model_nlu.pt')
+        best_model_path = os.path.join(output_dir, JointWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
-            download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.pt',
+            download_from_url(JointWithBertPredictor.default_model_url,
                               best_model_path)
 
         model = JointWithBert(config['model'], device, dataloader.tag_dim, dataloader.intent_dim)
         try:
-            model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model_nlu.pt'), map_location='cpu'))
+            model.load_state_dict(torch.load(os.path.join(output_dir,
+                                                          JointWithBertPredictor.default_model_name),
+                                             map_location='cpu'))
         except Exception as e:
             print(e)
         model.to(device)
@@ -178,6 +182,6 @@ class JointWithBertPredictor(NLU):
 
 
 if __name__ == '__main__':
-    nlu = JointWithBertPredictor(config_file='crosswoz_all_context.json')
+    nlu = JointWithBertPredictor()
     print(nlu.predict("北京布提克精品酒店酒店是什么类型，有健身房吗？",
                       ['你好，给我推荐一个评分是5分，价格在100-200元的酒店。', '推荐您去北京布提克精品酒店。']))
