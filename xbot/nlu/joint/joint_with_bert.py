@@ -2,6 +2,7 @@ import os
 import json
 from typing import Any
 
+from xbot.gl import DEFAULT_MODEL_PATH
 from xbot.util.nlu_util import NLU
 from xbot.util.path import get_root_path
 from xbot.util.download import download_from_url
@@ -126,7 +127,7 @@ class JointWithBertPredictor(NLU):
 
     default_model_config = 'crosswoz_all_context_joint_nlu.json'
     default_model_name = 'pytorch-joint-with-bert.pt'
-    default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_joint_with_bert.pt'
+    default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-joint-with-bert.pt'
 
     def __init__(self):
         root_path = get_root_path()
@@ -141,14 +142,14 @@ class JointWithBertPredictor(NLU):
         dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                                 pretrained_weights=config['model']['pretrained_weights'])
 
-        best_model_path = os.path.join(output_dir, JointWithBertPredictor.default_model_name)
+        best_model_path = os.path.join(DEFAULT_MODEL_PATH, JointWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
             download_from_url(JointWithBertPredictor.default_model_url,
                               best_model_path)
 
         model = JointWithBert(config['model'], device, dataloader.tag_dim, dataloader.intent_dim)
         try:
-            model.load_state_dict(torch.load(os.path.join(output_dir,
+            model.load_state_dict(torch.load(os.path.join(DEFAULT_MODEL_PATH,
                                                           JointWithBertPredictor.default_model_name),
                                              map_location='cpu'))
         except Exception as e:
