@@ -3,7 +3,7 @@ import json
 import random
 
 from xbot.gl import DEFAULT_MODEL_PATH
-from xbot.util.path import get_root_path, get_config_path
+from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.nlu.intent.intent_with_bert import IntentWithBert, IntentWithBertPredictor
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
@@ -28,8 +28,7 @@ if __name__ == '__main__':
     root_path = get_root_path()
     config_file = os.path.join(get_config_path(), IntentWithBertPredictor.default_model_config)
     config = json.load(open(config_file))
-    data_dir = config['data_dir']
-    data_dir = os.path.join(root_path, data_dir)
+    data_dir = os.path.join(get_data_path(), 'crosswoz/nlu_intent_data/')
     output_dir = config['output_dir']
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
@@ -48,7 +47,7 @@ if __name__ == '__main__':
     dataloader = Dataloader(intent_vocab=intent_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
     for data_key in ['val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)))),
+        dataloader.load_data(json.load(open(os.path.join(data_dir, 'intent_{}_data.json'.format(data_key)))),
                              data_key,
                              cut_sen_len=0,
                              use_bert_tokenizer=config['use_bert_tokenizer'])
