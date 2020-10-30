@@ -7,25 +7,23 @@ from xbot.gl import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
+
 import re
 import torch
 from torch import nn
 from transformers import BertModel
 
+
 def recover_intent_predict(dataloader, intent_logits):
     das = []
-    # aa = intent_logits[1]
 
-    max_index = torch.argsort(intent_logits,descending=True).numpy()
+    max_index = torch.argsort(intent_logits, descending=True).numpy()
     for j in max_index[0:5]:
         intent, domain, slot, value = re.split(r'\+', dataloader.id2intent[j])
         das.append([intent, domain, slot, value])
     return das
-    # for j in range(dataloader.intent_dim):
-    #     if intent_logits[j] > 0:
-    #         intent, domain, slot, value = re.split(r'\+', dataloader.id2intent[j])
-    #         das.append([intent, domain, slot, value])
+
+
 class IntentWithBert(nn.Module):
     """Intent Classification with Bert"""
 
