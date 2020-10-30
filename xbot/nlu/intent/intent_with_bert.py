@@ -135,7 +135,9 @@ class IntentWithBertPredictor(NLU):
         intent_logits = self.model.forward(word_seq_tensor, word_mask_tensor)
         # postprocess
         print(intent_logits[0][0].shape)
+
         intent = recover_intent(self.dataloader, intent_logits[0][0])
+        print(len(intent))
         return intent
 
 
