@@ -135,7 +135,7 @@ class SlotWithBertPredictor(NLU):
 
         self.model = model
         self.dataloader = dataloader
-        print(f"SlotWithBertPredictor loaded - {best_model_path}")
+        print(f"{best_model_path} loaded - {best_model_path}")
 
     def predict(self, utterance, context=list()):
         # utterance

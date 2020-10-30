@@ -117,7 +117,7 @@ class IntentWithBertPredictor(NLU):
         model.eval()
         self.model = model
         self.dataloader = dataloader
-        print(f"IntentWithBert loaded - {best_model_path}")
+        print(f"{best_model_path} loaded - {best_model_path}")
 
     def predict(self, utterance, context=list()):
         # utterance

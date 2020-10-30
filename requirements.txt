@@ -1,7 +1,7 @@
 transformers
 torch
 tensorflow
-numpy
+numpy>=1.16.0
 tqdm
 requests
 pytorch-lightning

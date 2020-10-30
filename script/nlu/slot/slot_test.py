@@ -25,8 +25,6 @@ def set_seed(seed):
 
 parser = argparse.ArgumentParser(description="Test a model.")
 
-
-
 if __name__ == '__main__':
     config_file = 'crosswoz_all_context_nlu_slot.json'
     curPath = os.path.abspath(os.path.dirname(__file__))
@@ -41,18 +39,16 @@ if __name__ == '__main__':
 
     set_seed(config['seed'])
 
-
-
-
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
-    tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'),encoding="utf-8"))
+    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'), encoding="utf-8"))
+    tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'), encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
     print('intent num:', len(intent_vocab))
     print('tag num:', len(tag_vocab))
     for data_key in ['val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data_zjw.json'.format(data_key)),encoding="utf-8")), data_key,
-                             cut_sen_len=0, use_bert_tokenizer=config['use_bert_tokenizer'])
+        dataloader.load_data(
+            json.load(open(os.path.join(data_dir, '{}_data_zjw.json'.format(data_key)), encoding="utf-8")), data_key,
+            cut_sen_len=0, use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
     if not os.path.exists(output_dir):
@@ -72,7 +68,7 @@ if __name__ == '__main__':
     slot_loss = 0
     for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key=data_key):
         pad_batch = tuple(t.to(DEVICE) for t in pad_batch)
-        word_seq_tensor, tag_seq_tensor,  word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
+        word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
         if not config['model']['context']:
             context_seq_tensor, context_mask_tensor = None, None
 

@@ -157,7 +157,7 @@ class JointWithBertPredictor(NLU):
 
         self.model = model
         self.dataloader = dataloader
-        print("JointWithBert loaded")
+        print(f"{best_model_path} loaded")
 
     def predict(self, utterance, context=list()):
         ori_word_seq = self.dataloader.tokenizer.tokenize(utterance)
