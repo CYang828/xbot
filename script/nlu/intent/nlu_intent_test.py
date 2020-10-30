@@ -3,7 +3,7 @@ import json
 import random
 
 from xbot.gl import DEFAULT_MODEL_PATH
-from xbot.util.path import get_root_path
+from xbot.util.path import get_root_path, get_config_path
 from xbot.nlu.intent.intent_with_bert import IntentWithBert, IntentWithBertPredictor
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
@@ -26,9 +26,7 @@ if __name__ == '__main__':
 
     # path
     root_path = get_root_path()
-    config_file = os.path.join(root_path,
-                               'xbot/configs/{}'.format(
-                                   IntentWithBertPredictor.default_model_config))
+    config_file = os.path.join(get_config_path(), IntentWithBertPredictor.default_model_config)
     config = json.load(open(config_file))
     data_dir = config['data_dir']
     data_dir = os.path.join(root_path, data_dir)

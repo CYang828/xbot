@@ -4,7 +4,7 @@ from typing import Any
 
 from xbot.util.nlu_util import NLU
 from xbot.gl import DEFAULT_MODEL_PATH
-from xbot.util.path import get_root_path
+from xbot.util.path import get_root_path, get_config_path
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
@@ -87,8 +87,8 @@ class IntentWithBertPredictor(NLU):
     def __init__(self):
         # path
         root_path = get_root_path()
-        config_file = os.path.join(root_path,
-                                   'xbot/configs/{}'.format(IntentWithBertPredictor.default_model_config))
+
+        config_file = os.path.join(get_config_path(), IntentWithBertPredictor.default_model_config)
 
         # load config
         config = json.load(open(config_file))
