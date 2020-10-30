@@ -3,7 +3,7 @@ import json
 import random
 import zipfile
 
-from xbot.util.path import get_root_path, get_config_path
+from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
@@ -29,8 +29,7 @@ if __name__ == '__main__':
     root_path = get_root_path()
     config_path = os.path.join(get_config_path(), 'crosswoz_all_context_nlu_intent.json')
     config = json.load(open(config_path))
-    data_path = config['data_dir']
-    data_path = os.path.join(root_path, data_path)
+    data_path = os.path.join(get_data_path(), 'crosswoz/nlu_intent_data/')
     output_dir = config['output_dir']
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
