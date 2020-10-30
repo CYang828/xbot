@@ -4,7 +4,7 @@ from typing import Any
 
 from xbot.util.nlu_util import NLU
 from xbot.gl import DEFAULT_MODEL_PATH
-from xbot.util.path import get_root_path, get_config_path
+from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
@@ -92,11 +92,12 @@ class IntentWithBertPredictor(NLU):
 
         # load config
         config = json.load(open(config_file))
-        data_path = os.path.join(root_path, config['data_dir'])
         device = config['DEVICE']
 
         # load intent vocabulary and dataloader
-        intent_vocab = json.load(open(os.path.join(data_path, 'intent_vocab.json'), encoding='utf-8'))
+        intent_vocab = json.load(open(os.path.join(get_data_path(),
+                                                   'crosswoz/nlu_intent_data/intent_vocab.json'),
+                                      encoding='utf-8'))
         dataloader = Dataloader(intent_vocab=intent_vocab,
                                 pretrained_weights=config['model']['pretrained_weights'])
         # load best model

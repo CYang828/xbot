@@ -12,3 +12,6 @@ def get_config_path():
     return config_path
 
 
+def get_data_path():
+    config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data/'))
+    return config_path
