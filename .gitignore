@@ -12,3 +12,4 @@ build/
 xbot.egg-info/
 dist/
 events*
+*.pt
