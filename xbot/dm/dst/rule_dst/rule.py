@@ -34,6 +34,8 @@ class RuleDST(DST):
         sys_domains = Counter([x[1] for x in sys_da if x[0] in ['Inform', 'Recommend']])
 
         # 为什么首选 select_domain
+        # 观察数据集可以发现，Select 意图出现的时候是主导整句话的，即便出现了
+        # Inform 和 Request 也是为了为 Select 提供辅助信息，Inform 排在 Request 之后，也是这个道理
         if len(select_domains) > 0:
             self.state['cur_domain'] = select_domains.most_common(1)[0][0]
         elif len(request_domains) > 0:
@@ -46,6 +48,8 @@ class RuleDST(DST):
             self.state['cur_domain'] = None
 
         # 当 system action 中没有 inform 的意图且存在 NoOffer 的意图，判定为确实没 offer
+        # 要满足没有 Inform，是因为如果存在 Inform，意味着 system 基于之前的约束信息可能提出了新的考虑意见，
+        # 所以只有当 system 基于当前约束完全无法给出建议的时候，当前 domain 的约束才算失效
         no_offer = 'NoOffer' in [x[0] for x in sys_da] and 'Inform' not in [x[0] for x in sys_da]
         # DONE: clean cur domain constraints because no offer
 
