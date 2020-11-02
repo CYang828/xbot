@@ -21,9 +21,9 @@ def set_seed(seed):
 
 
 if __name__ == '__main__':
-    data_urls = {'train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train_data.json',
-                 'val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/val_data.json',
-                 'test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test_data.json'}
+    data_urls = {'slot_train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/slot_train_data.json',
+                 'slot_val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/slot_val_data.json',
+                 'slot_test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/slot_test_data.json'}
 
     # load config
     root_path = get_root_path()

@@ -3,7 +3,7 @@ import json
 import random
 import zipfile
 
-from xbot.util.path import get_root_path
+from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
@@ -14,8 +14,6 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-# os.environ["CUDA_VISIBLE_DEVICES"]='1'
-
 
 def set_seed(seed):
     random.seed(seed)
@@ -24,19 +22,18 @@ def set_seed(seed):
 
 
 if __name__ == '__main__':
-    data_urls = {'train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train_data.json',
-                 'val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/val_data.json',
-                 'test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test_data.json'}
+    data_urls = {'intent_train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json',
+                 'intent_val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json',
+                 'intent_test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json'}
     # load config
     root_path = get_root_path()
-    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_intent.json')
+    config_path = os.path.join(get_config_path(), 'crosswoz_all_context_nlu_intent.json')
     config = json.load(open(config_path))
-    data_path = config['data_dir']
-    data_path = os.path.join(root_path, data_path)
+    data_path = os.path.join(get_data_path(), 'crosswoz/nlu_intent_data/')
     output_dir = config['output_dir']
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
-    output_dir = os.path.join(root_path, output_dir)
+    log_dir = os.path.join(root_path, log_dir)
     device = config['DEVICE']
 
     # download data
@@ -55,7 +52,7 @@ if __name__ == '__main__':
 
     # load data
     for data_key in ['train', 'val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_path, '{}_data.json'.format(data_key)),
+        dataloader.load_data(json.load(open(os.path.join(data_path, 'intent_{}_data.json'.format(data_key)),
                                             encoding="utf-8")), data_key, cut_sen_len=config['cut_sen_len'],
                              use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))

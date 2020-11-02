@@ -5,16 +5,17 @@
 # @Software: PyCharm
 
 
-import argparse
 import os
 import json
 import random
 import numpy as np
-import torch
-import sys
-from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
+
+from xbot.util.path import get_root_path
 from xbot.nlu.slot.slot_with_bert import SlotWithBert
+from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_slot_postprocess import is_slot_da, calculate_f1, recover_intent
+
+import torch
 
 
 def set_seed(seed):
@@ -23,36 +24,36 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-parser = argparse.ArgumentParser(description="Test a model.")
-
-
-
 if __name__ == '__main__':
-    config_file = 'crosswoz_all_context_nlu_slot.json'
-    curPath = os.path.abspath(os.path.dirname(__file__))
-    rootPath = os.path.dirname(os.path.dirname(os.path.dirname(curPath)))
-    sys.path.append(rootPath)
-    config_path = os.path.join(rootPath, 'xbot/configs/{}'.format(config_file))
+
+    data_urls = {'slot_train_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/slot_train_data.json',
+                 'slot_val_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/slot_val_data.json',
+                 'slot_test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/slot_test_data.json'}
+
+    # load config
+    root_path = get_root_path()
+    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_slot.json')
     config = json.load(open(config_path))
-    data_dir = config['data_dir']
+    data_path = config['data_dir']
+    data_path = os.path.join(root_path, data_path)
     output_dir = config['output_dir']
+    output_dir = os.path.join(root_path, output_dir)
     log_dir = config['log_dir']
-    DEVICE = config['DEVICE']
+    output_dir = os.path.join(root_path, output_dir)
+    device = config['DEVICE']
 
     set_seed(config['seed'])
 
-
-
-
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
-    tag_vocab = json.load(open(os.path.join(data_dir, 'tag_vocab.json'),encoding="utf-8"))
+    intent_vocab = json.load(open(os.path.join(data_path, 'intent_vocab.json'), encoding="utf-8"))
+    tag_vocab = json.load(open(os.path.join(data_path, 'tag_vocab.json'), encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
     print('intent num:', len(intent_vocab))
     print('tag num:', len(tag_vocab))
     for data_key in ['val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data_zjw.json'.format(data_key)),encoding="utf-8")), data_key,
-                             cut_sen_len=0, use_bert_tokenizer=config['use_bert_tokenizer'])
+        dataloader.load_data(
+            json.load(open(os.path.join(data_path, 'slot_{}_data.json'.format(data_key)), encoding="utf-8")), data_key,
+            cut_sen_len=0, use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
     if not os.path.exists(output_dir):
@@ -60,9 +61,9 @@ if __name__ == '__main__':
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    model = SlotWithBert(config['model'], DEVICE, dataloader.tag_dim)
-    model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model_nlu_slot.bin'), DEVICE))
-    model.to(DEVICE)
+    model = SlotWithBert(config['model'], device, dataloader.tag_dim)
+    model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model_nlu_slot.pt'), device))
+    model.to(device)
     model.eval()
 
     batch_size = config['model']['batch_size']
@@ -71,8 +72,8 @@ if __name__ == '__main__':
     predict_golden = {'slot': []}
     slot_loss = 0
     for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key=data_key):
-        pad_batch = tuple(t.to(DEVICE) for t in pad_batch)
-        word_seq_tensor, tag_seq_tensor,  word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
+        pad_batch = tuple(t.to(device) for t in pad_batch)
+        word_seq_tensor, tag_seq_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
         if not config['model']['context']:
             context_seq_tensor, context_mask_tensor = None, None
 
