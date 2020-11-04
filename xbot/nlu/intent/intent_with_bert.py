@@ -7,6 +7,7 @@ from xbot.gl import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
+from data.crosswoz.data_process.nlu_intent_postprocess import calculate_f1, recover_intent
 
 import re
 import torch
@@ -14,14 +15,14 @@ from torch import nn
 from transformers import BertModel
 
 
-def recover_intent_predict(dataloader, intent_logits):
-    das = []
-
-    max_index = torch.argsort(intent_logits, descending=True).numpy()
-    for j in max_index[0:5]:
-        intent, domain, slot, value = re.split(r'\+', dataloader.id2intent[j])
-        das.append([intent, domain, slot, value])
-    return das
+# def recover_intent_predict(dataloader, intent_logits):
+#     das = []
+#
+#     max_index = torch.argsort(intent_logits, descending=True).numpy()
+#     for j in max_index[0:5]:
+#         intent, domain, slot, value = re.split(r'\+', dataloader.id2intent[j])
+#         das.append([intent, domain, slot, value])
+#     return das
 
 
 class IntentWithBert(nn.Module):
@@ -42,23 +43,14 @@ class IntentWithBert(nn.Module):
         # load pretrain model from model hub
         self.bert = BertModel.from_pretrained(model_config['pretrained_weights'])
         self.dropout = nn.Dropout(model_config['dropout'])
-        self.context = model_config['context']
         self.finetune = model_config['finetune']
-        self.context_grad = model_config['context_grad']
         self.hidden_units = model_config['hidden_units']
         if self.hidden_units > 0:
-            if self.context:
-                self.intent_hidden = nn.Linear(2 * self.bert.config.hidden_size, self.hidden_units)
-                self.intent_classifier = nn.Linear(self.hidden_units, self.intent_num_labels)
-            else:
-                self.intent_hidden = nn.Linear(self.bert.config.hidden_size, self.hidden_units)
-                self.intent_classifier = nn.Linear(self.hidden_units, self.intent_num_labels)
+            self.intent_hidden = nn.Linear(self.bert.config.hidden_size, self.hidden_units)
+            self.intent_classifier = nn.Linear(self.hidden_units, self.intent_num_labels)
             nn.init.xavier_uniform_(self.intent_hidden.weight)
         else:
-            if self.context:
-                self.intent_classifier = nn.Linear(self.bert.config.hidden_size, self.intent_num_labels)
-            else:
-                self.intent_classifier = nn.Linear(self.bert.config.hidden_size, self.intent_num_labels)
+            self.intent_classifier = nn.Linear(self.bert.config.hidden_size, self.intent_num_labels)
         nn.init.xavier_uniform_(self.intent_classifier.weight)
 
         # Binary Cross Entropy
@@ -111,20 +103,16 @@ class IntentWithBertPredictor(NLU):
         dataloader = Dataloader(intent_vocab=intent_vocab,
                                 pretrained_weights=config['model']['pretrained_weights'])
         # load best model
-        best_model_path = os.path.join(DEFAULT_MODEL_PATH, IntentWithBertPredictor.default_model_name)
+        best_model_path = os.path.join(os.path.join(root_path, DEFAULT_MODEL_PATH), IntentWithBertPredictor.default_model_name)
+        # best_model_path = os.path.join(DEFAULT_MODEL_PATH, IntentWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
             download_from_url(IntentWithBertPredictor.default_model_url,
                               best_model_path)
         model = IntentWithBert(config['model'], device, dataloader.intent_dim)
-        try:
-            model.load_state_dict(torch.load(os.path.join(DEFAULT_MODEL_PATH,
-                                                          IntentWithBertPredictor.default_model_name),
-                                             map_location='cpu'))
-        except Exception as e:
-            print(e)
+        model.load_state_dict(torch.load(best_model_path,map_location='cuda:0'))
 
         # cpu process
-        model.to("cpu")
+        model.to(device)
         model.eval()
         self.model = model
         self.dataloader = dataloader
@@ -134,18 +122,19 @@ class IntentWithBertPredictor(NLU):
         # utterance
         ori_word_seq = self.dataloader.tokenizer.tokenize(utterance)
         # tag
-        ori_tag_seq = ['O'] * len(ori_word_seq)
+        # ori_tag_seq = ['O'] * len(ori_word_seq)
         intents = []
 
-        batch_data = [[ori_word_seq, ori_tag_seq, intents]]
+        word_seq, new2ori = ori_word_seq, None
+        batch_data = [[ori_word_seq, intents, word_seq, self.dataloader.seq_intent2id(intents)]]
+
         pad_batch = self.dataloader.pad_batch(batch_data)
-        pad_batch = tuple(t.to('cpu') for t in pad_batch)
-        word_seq_tensor, intent_tensor, word_mask_tensor = pad_batch
+        pad_batch = tuple(t.to("cuda:0") for t in pad_batch)
+        word_seq_tensor, word_mask_tensor, intent_tensor = pad_batch
         # inference
-        intent_logits = self.model(word_seq_tensor, word_mask_tensor)
+        intent_logits,_ = self.model(word_seq_tensor, word_mask_tensor)
         # postprocess
-        print(intent_logits[0][0].shape)
-        intent = recover_intent_predict(self.dataloader, intent_logits[0][0])
+        intent = recover_intent(self.dataloader, intent_logits[0])
         return intent
 
 

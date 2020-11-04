@@ -66,7 +66,7 @@ def recover_intent(dataloader, intent_logits):
     das = []
     for j in range(dataloader.intent_dim):
         if intent_logits[j] > 0:
-            intent, domain, slot, value = re.split(r'\+', dataloader.id2intent[j])
-            das.append([intent, domain, slot, value])
+            intent_domain = dataloader.id2intent[j]
+            das.append(intent_domain)
 
     return das

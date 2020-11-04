@@ -1,1 +1,1 @@
-DEFAULT_MODEL_PATH = 'xbot-model/'
+DEFAULT_MODEL_PATH = 'output/all_context/'

@@ -3,6 +3,10 @@ import json
 import random
 import zipfile
 
+###注意训练测试预测的文件开头都有append路径
+import sys
+sys.path.append('/libianbian/xbot_push')
+
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from xbot.nlu.intent.intent_with_bert import IntentWithBert
@@ -102,7 +106,7 @@ if __name__ == '__main__':
         model.train()
         batched_data = dataloader.get_train_batch(batch_size)
         batched_data = tuple(t.to(device) for t in batched_data)
-        word_seq_tensor, intent_tensor, word_mask_tensor = batched_data
+        word_seq_tensor, word_mask_tensor, intent_tensor = batched_data
         intent_logits, intent_loss = model.forward(word_seq_tensor, word_mask_tensor, intent_tensor)
 
         train_intent_loss += intent_loss.item()
@@ -121,11 +125,11 @@ if __name__ == '__main__':
 
             predict_golden = {'intent': []}
 
-            val_slot_loss, val_intent_loss = 0, 0
+            val_intent_loss = 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key='val'):
                 pad_batch = tuple(t.to(device) for t in pad_batch)
-                word_seq_tensor, intent_tensor, word_mask_tensor = pad_batch
+                word_seq_tensor, word_mask_tensor, intent_tensor = pad_batch
 
                 with torch.no_grad():
                     intent_logits, intent_loss = model.forward(word_seq_tensor,word_mask_tensor,intent_tensor)
@@ -133,7 +137,7 @@ if __name__ == '__main__':
                 val_intent_loss += intent_loss.item() * real_batch_size
                 for j in range(real_batch_size):
                     predicts = recover_intent(dataloader, intent_logits[j])
-                    labels = ori_batch[j][3]
+                    labels = ori_batch[j][1]
 
                     predict_golden['intent'].append({
                         'predict': [x for x in predicts ],
@@ -161,18 +165,21 @@ if __name__ == '__main__':
 
             if F1 > best_val_f1:
                 best_val_f1 = F1
-                torch.save(model.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
+                torch.save(model.state_dict(), os.path.join(output_dir, 'pytorch-intent-with-bert.pt'))
                 print('best val F1 %.4f' % best_val_f1)
                 print('save on', output_dir)
 
             train_intent_loss = 0
 
-    writer.add_text('val overall F1', '%.2f' % (100 * best_val_f1))
+    writer.add_text('val intent F1', '%.2f' % (100 * best_val_f1))
     writer.close()
 
-    model_path = os.path.join(output_dir, 'pytorch_model.bin')
+    model_path = os.path.join(output_dir, 'pytorch-intent-with-bert.pt')##存放模型
     zip_path = config['zipped_model_path']
+    zip_path = os.path.join(root_path, zip_path)
     print('zip model to', zip_path)
 
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:  ##存放压缩模型
         zf.write(model_path)
+
+
