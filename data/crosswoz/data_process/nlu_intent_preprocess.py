@@ -5,8 +5,9 @@ import sys
 from collections import Counter
 from transformers import BertTokenizer
 
-import sys
-sys.path.append('/libianbian/xbot_push')
+# ###注意训练测试预测、数据预处理的文件开头都有服务器上存放代码的append路径
+# import sys
+# sys.path.append('/libianbian/xbot_push')
 
 def read_zipped_json(filepath, filename):
     archive = zipfile.ZipFile(filepath, 'r')

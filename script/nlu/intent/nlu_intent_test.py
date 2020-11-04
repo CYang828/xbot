@@ -3,8 +3,9 @@ import json
 import random
 
 
-import sys
-sys.path.append('/libianbian/xbot')
+# ###注意训练测试预测、数据预处理的文件开头都有服务器上存放代码的append路径
+# import sys
+# sys.path.append('/libianbian/xbot_push')
 
 from xbot.gl import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
