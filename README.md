@@ -44,6 +44,7 @@ cd xbot/ && python xbot/joint/joint_with_bert.py
                 - test.json.zip
                 - train.json.zip
                 - val.json.zip
+            - 各模块中间数据文件
     - script(训练和测试脚本)
         - nlu
             - intent
