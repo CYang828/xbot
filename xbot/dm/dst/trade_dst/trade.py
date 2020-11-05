@@ -283,9 +283,9 @@ class TradeDST(DST):
     common_config_name = 'dst/trade/common.json'
 
     model_urls = {
-        'trade-Epoch-9-JACC-0.5140.pth': 'http://qiw2jpwfc.hn-bkt.clouddn.com/trade-Epoch-9-JACC-0.5140.pth',
-        'lang-all.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/lang-all.pkl',
-        'mem-lang-all.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/mem-lang-all.pkl',
+        'trade-Epoch-9-JACC-0.5060.pth': 'http://qiw2jpwfc.hn-bkt.clouddn.com/trade-Epoch-9-JACC-0.5060.pth',
+        'lang-train.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/lang-train.pkl',
+        'mem-lang-train.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/mem-lang-train.pkl',
         'ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/ontology.json'
     }
 
@@ -331,7 +331,7 @@ class TradeDST(DST):
                       pad_id=self.model_config['pad_id'], slots=self.all_slots,
                       num_gates=len(self.gate2id), unk_mask=self.model_config['unk_mask'])
 
-        # model.load_state_dict(torch.load(self.model_config['trained_model_path'], map_location='cpu'))
+        model.load_state_dict(torch.load(self.model_config['trained_model_path'], map_location='cpu'))
 
         self.model = model.to(self.model_config['device']).eval()
         print(f'>>> {self.model_config["trained_model_path"]} loaded ...')
@@ -343,10 +343,7 @@ class TradeDST(DST):
 
     def update_belief_state(self, predict_belief):
         for domain_slot, value in predict_belief:
-            try:
-                domain, slot = domain_slot.split('-')
-            except ValueError:
-                print(domain_slot)
+            domain, slot = domain_slot.split('-')
             if domain in self.state['belief_state']:
                 self.state['belief_state'][domain][slot] = value
 
