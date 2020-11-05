@@ -90,7 +90,7 @@ class IntentWithBert(nn.Module):
 class IntentWithBertPredictor(NLU):
     """NLU Intent Classification with Bert 预测器"""
 
-    default_model_config = 'crosswoz_all_context_nlu_intent.json'
+    default_model_config = 'nlu/crosswoz_all_context_nlu_intent.json'
     default_model_name = 'pytorch-intent-with-bert.pt'
     default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.pt'
 
