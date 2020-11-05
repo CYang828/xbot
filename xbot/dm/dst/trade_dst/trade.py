@@ -13,10 +13,6 @@ from xbot.util.download import download_from_url
 from xbot.util.path import get_data_path, get_config_path
 from data.crosswoz.data_process.dst.trade_preprocess import get_slot_information, prepare_data_for_update
 
-import sys
-
-sys.path.append('/xhp/xbot/script/dst/trade')
-
 
 class EncoderRNN(nn.Module):
     def __init__(self, vocab_size, hidden_size, dropout, n_layers, pad_id,
