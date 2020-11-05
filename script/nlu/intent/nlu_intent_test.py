@@ -3,10 +3,6 @@ import json
 import random
 
 
-# ###注意训练测试预测、数据预处理的文件开头都有服务器上存放代码的append路径
-# import sys
-# sys.path.append('/libianbian/xbot_push')
-
 from xbot.gl import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.nlu.intent.intent_with_bert import IntentWithBert, IntentWithBertPredictor
@@ -16,7 +12,6 @@ from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent, ca
 
 import torch
 import numpy as np
-
 
 def set_seed(seed):
     random.seed(seed)

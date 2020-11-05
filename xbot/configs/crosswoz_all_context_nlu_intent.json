@@ -11,7 +11,7 @@
     "finetune": true,
     "pretrained_weights": "hfl/chinese-bert-wwm-ext",
     "check_step": 100,
-    "max_step": 5000,
+    "max_step": 500,
     "batch_size": 50,
     "learning_rate": 3e-5,
     "adam_epsilon": 1e-8,

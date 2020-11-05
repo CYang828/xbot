@@ -5,9 +5,7 @@ import sys
 from collections import Counter
 from transformers import BertTokenizer
 
-# ###注意训练测试预测、数据预处理的文件开头都有服务器上存放代码的append路径
-# import sys
-# sys.path.append('/libianbian/xbot_push')
+
 
 def read_zipped_json(filepath, filename):
     archive = zipfile.ZipFile(filepath, 'r')
@@ -15,7 +13,7 @@ def read_zipped_json(filepath, filename):
 
 
 def preprocess():
-    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    cur_dir = os.path.dirname(os.path.abspath(__file__))#当前文件所在的文件夹路径
     data_dir = os.path.join(cur_dir, '../../../data/crosswoz/raw')
     processed_data_dir = os.path.join(cur_dir, '../nlu_intent_data/')
     if not os.path.exists(processed_data_dir):
@@ -37,14 +35,13 @@ def preprocess():
         for no, sess in data[key].items():
             for i, turn in enumerate(sess['messages']):
                 utterance = turn['content']
-                # Notice: ## prefix, space remove
                 tokens = tokenizer.tokenize(utterance)
 
                 intents = []
-                for intent, domain, slot, value in turn['dialog_act']:
+                for intent, domain, slot, value in turn['dialog_act']:#从字段中提取标签
                     intents.append('+'.join([intent, domain]))
 
-                processed_data[key].append([tokens, intents])
+                processed_data[key].append([tokens, intents])  #将分词之后的一条数据和标签存放在一起
                 all_intent += intents
         all_intent = [x[0] for x in dict(Counter(all_intent)).items()]   #{"intent":3}  只取出来字典中的key
         print('loaded {}, size {}'.format(key, len(processed_data[key])))
