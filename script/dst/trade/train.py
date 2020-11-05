@@ -55,11 +55,7 @@ class Trainer:
         model_path = config['model_path']
         if model_path:
             print(f'Model {model_path} loaded')
-            if self.n_gpus > 0:
-                trained_model_params = torch.load(model_path)
-            else:
-                trained_model_params = torch.load(model_path, lambda storage, loc: storage)
-
+            trained_model_params = torch.load(model_path)
             self.model.load_state_dict(trained_model_params)
 
         # Initialize optimizers and criterion

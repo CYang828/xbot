@@ -335,7 +335,7 @@ class TradeDST(DST):
                       pad_id=self.model_config['pad_id'], slots=self.all_slots,
                       num_gates=len(self.gate2id), unk_mask=self.model_config['unk_mask'])
 
-        model.load_state_dict(torch.load(self.model_config['trained_model_path'], map_location='cpu'))
+        model.load_state_dict(torch.load(self.model_config['trained_model_path']))
 
         self.model = model.to(self.model_config['device']).eval()
         print(f'>>> {self.model_config["trained_model_path"]} loaded ...')
