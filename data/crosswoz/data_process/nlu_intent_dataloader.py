@@ -46,7 +46,7 @@ class Dataloader:
             else:
                 word_seq = d[0]
             d.append(word_seq)
-            d.append(self.seq_intent2id(d[2]))
+            d.append(self.seq_intent2id(d[1]))
             # [list of words, list of tags, list of intents, original dialog act,问句，list of words, intent id]
             if data_key == 'train':
                 for intent_id in d[-1]:
@@ -84,26 +84,25 @@ class Dataloader:
 
     def pad_batch(self, batch_data):
         batch_size = len(batch_data)
-        max_seq_len = max([len(x[-2]) for x in batch_data]) + 2
+        max_seq_len = max([len(x[0]) for x in batch_data]) + 2
         word_mask_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         word_seq_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
 
         intent_tensor = torch.zeros((batch_size, self.intent_dim), dtype=torch.float)  #
 
         for i in range(batch_size):
-            words = batch_data[i][-2]
+            words = batch_data[i][0]
             intents = batch_data[i][-1]
             words = ['[CLS]'] + words + ['[SEP]']
             indexed_tokens = self.tokenizer.convert_tokens_to_ids(words)
             sen_len = len(words)
             word_seq_tensor[i, :sen_len] = torch.LongTensor([indexed_tokens])
-
             word_mask_tensor[i, :sen_len] = torch.LongTensor([1] * sen_len)
 
             for j in intents:
                 intent_tensor[i, j] = 1.
 
-        return word_seq_tensor, intent_tensor, word_mask_tensor
+        return word_seq_tensor, word_mask_tensor, intent_tensor
 
     def get_train_batch(self, batch_size):
         batch_data = random.choices(self.data['train'], k=batch_size)
