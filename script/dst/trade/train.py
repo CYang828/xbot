@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import copy
 import random
@@ -10,8 +9,6 @@ import torch
 import torch.nn as nn
 from torch import optim
 from torch.optim import lr_scheduler
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from xbot.dm.dst.trade_dst.trade import Trade
 from xbot.util.download import download_from_url
