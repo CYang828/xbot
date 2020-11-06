@@ -13,7 +13,7 @@ from torch.optim import lr_scheduler
 from xbot.dm.dst.trade_dst.trade import Trade
 from xbot.util.download import download_from_url
 from xbot.util.path import get_root_path, get_config_path, get_data_path
-from script.dst.trade.utils import masked_cross_entropy_for_value, evaluate_metrics, prepare_data_seq
+from xbot.dm.dst.trade_dst.utils import masked_cross_entropy_for_value, evaluate_metrics, prepare_data_seq
 
 
 class Trainer:
@@ -26,7 +26,6 @@ class Trainer:
         self.num_gates = len(gating_dict)
         self.use_gate = config['use_gate']
         self.output_dir = config['output_dir']
-        self.use_teacher_forcing = config['use_teacher_forcing']
         self.teacher_forcing_ratio = config['teacher_forcing_ratio']
 
         self.cross_entropy = nn.CrossEntropyLoss()

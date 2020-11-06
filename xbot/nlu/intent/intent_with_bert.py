@@ -7,7 +7,7 @@ from xbot.gl import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from data.crosswoz.data_process.nlu_intent_postprocess import calculate_f1, recover_intent
+from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
 
 import re
 import torch
@@ -94,7 +94,7 @@ class IntentWithBertPredictor(NLU):
 
         # load config
         config = json.load(open(config_file))
-        device = config['DEVICE']
+        self.device = config['DEVICE']
 
         # load intent vocabulary and dataloader
         intent_vocab = json.load(open(os.path.join(get_data_path(),
@@ -103,16 +103,16 @@ class IntentWithBertPredictor(NLU):
         dataloader = Dataloader(intent_vocab=intent_vocab,
                                 pretrained_weights=config['model']['pretrained_weights'])
         # load best model
-        best_model_path = os.path.join(os.path.join(root_path, DEFAULT_MODEL_PATH), IntentWithBertPredictor.default_model_name)
+        best_model_path = os.path.join(os.path.join(root_path, DEFAULT_MODEL_PATH),
+                                       IntentWithBertPredictor.default_model_name)
         # best_model_path = os.path.join(DEFAULT_MODEL_PATH, IntentWithBertPredictor.default_model_name)
         if not os.path.exists(best_model_path):
             download_from_url(IntentWithBertPredictor.default_model_url,
                               best_model_path)
-        model = IntentWithBert(config['model'], device, dataloader.intent_dim)
-        model.load_state_dict(torch.load(best_model_path,map_location='cuda:0'))
+        model = IntentWithBert(config['model'], self.device, dataloader.intent_dim)
+        model.load_state_dict(torch.load(best_model_path, map_location=self.device))
 
-        # cpu process
-        model.to(device)
+        model.to(self.device)
         model.eval()
         self.model = model
         self.dataloader = dataloader
@@ -129,7 +129,7 @@ class IntentWithBertPredictor(NLU):
         batch_data = [[ori_word_seq, intents, word_seq, self.dataloader.seq_intent2id(intents)]]
 
         pad_batch = self.dataloader.pad_batch(batch_data)
-        pad_batch = tuple(t.to("cuda:0") for t in pad_batch)
+        pad_batch = tuple(t.to(self.device) for t in pad_batch)
         word_seq_tensor, word_mask_tensor, intent_tensor = pad_batch
         # inference
         intent_logits,_ = self.model(word_seq_tensor, word_mask_tensor)
