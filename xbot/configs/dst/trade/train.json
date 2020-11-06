@@ -4,7 +4,7 @@
   "load_model_name": "",
   "all_vocab": 1,
   "debug": 0,
-  "load_embedding": 1,
+  "load_embedding": 0,
   "fix_embedding":0,
   "use_gate": 1,
   "teacher_forcing_ratio": 0.5,

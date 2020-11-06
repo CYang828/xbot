@@ -29,7 +29,6 @@ class Trainer:
         self.num_gates = len(gating_dict)
         self.use_gate = config['use_gate']
         self.output_dir = config['output_dir']
-        self.use_teacher_forcing = config['use_teacher_forcing']
         self.teacher_forcing_ratio = config['teacher_forcing_ratio']
 
         self.cross_entropy = nn.CrossEntropyLoss()
@@ -249,6 +248,8 @@ def main():
     model_config['n_gpus'] = torch.cuda.device_count()
     model_config['batch_size'] = max(1, model_config['n_gpus']) * model_config['batch_size']
     model_config['device'] = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    if model_config['load_embedding']:
+        model_config['hidden_size'] = 300
 
     model_config['data_path'] = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
     model_config['output_dir'] = os.path.join(root_path, model_config['output_dir'])  # 可以用来保存模型文件
