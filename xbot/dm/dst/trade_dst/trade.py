@@ -311,6 +311,8 @@ class TradeDST(DST):
         self.model_config['data_path'] = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
         self.model_config['n_gpus'] = 0 if self.model_config['device'] == 'cpu' else torch.cuda.device_count()
         self.model_config['device'] = torch.device(self.model_config['device'])
+        if model_config['load_embedding']:
+            model_config['hidden_size'] = 300
 
         # download data
         for model_key, url in TradeDST.model_urls.items():
