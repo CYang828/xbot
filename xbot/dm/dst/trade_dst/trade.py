@@ -1,7 +1,6 @@
 import os
 import json
 import pickle
-from typing import Any
 
 import numpy as np
 
@@ -14,11 +13,12 @@ from xbot.util.download import download_from_url
 from xbot.util.path import get_data_path, get_config_path
 from data.crosswoz.data_process.dst.trade_preprocess import get_slot_information, prepare_data_for_update
 
+import sys
+
+sys.path.append('/xhp/xbot/script/dst/trade')
+
 
 class EncoderRNN(nn.Module):
-    def _forward_unimplemented(self, *input: Any) -> None:
-        pass
-
     def __init__(self, vocab_size, hidden_size, dropout, n_layers, pad_id,
                  pretrained_embedding_path='', load_embedding=False, fix_embedding=True):
         super(EncoderRNN, self).__init__()
@@ -61,9 +61,6 @@ class EncoderRNN(nn.Module):
 
 
 class Generator(nn.Module):
-    def _forward_unimplemented(self, *input: Any) -> None:
-        pass
-
     def __init__(self, lang, shared_emb, vocab_size, hidden_size,
                  n_layer, dropout, slots, num_gates, parallel_decode):
         super(Generator, self).__init__()
@@ -237,9 +234,6 @@ class Generator(nn.Module):
 
 class Trade(nn.Module):
 
-    def _forward_unimplemented(self, *input: Any) -> None:
-        pass
-
     def __init__(self, lang, vocab_size, hidden_size, dropout, num_encoder_layers, num_decoder_layers, pad_id, slots,
                  num_gates, unk_mask, pretrained_embedding_path='', load_embedding=False, fix_embedding=True,
                  parallel_decode=False):
@@ -396,11 +390,7 @@ if __name__ == '__main__':
     import random
     dst_model = TradeDST()
     data_path = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
-    dials_path = os.path.join(data_path, 'dev_dials.json')
-    # download dials file
-    if not os.path.exists(dials_path):
-        download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/dev_dials.json', dials_path)
-    with open(dials_path, 'r', encoding='utf8') as f:
+    with open(os.path.join(data_path, 'dev_dials.json'), 'r', encoding='utf8') as f:
         dials = json.load(f)
         example = random.choice(dials)
         break_turn = 0

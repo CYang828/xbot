@@ -139,7 +139,6 @@ data/crosswoz/nlu_intent_data/intent_train_data.json
 data/crosswoz/readable_data/readabe_test_data.json
 data/crosswoz/readable_data/readabe_train_data.json
 data/crosswoz/readable_data/readabe_val_data.json
-data/crosswoz/dst_trade_data/ontology.json
 log/*
 output/*
 build/
@@ -147,9 +146,3 @@ xbot.egg-info/
 dist/
 events*
 *.pt
-*.pkl
-*.pth
-
-*.pkl
-*.pth
-
