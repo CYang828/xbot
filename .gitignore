@@ -133,12 +133,7 @@ dmypy.json
 .pyre/
 .idea/*
 *.log
-data/crosswoz/nlu_intent_data/intent_test_data.json
-data/crosswoz/nlu_intent_data/intent_val_data.json
-data/crosswoz/nlu_intent_data/intent_train_data.json
-data/crosswoz/readable_data/readabe_test_data.json
-data/crosswoz/readable_data/readabe_train_data.json
-data/crosswoz/readable_data/readabe_val_data.json
+data/crosswoz/*_data/
 log/*
 output/*
 build/
