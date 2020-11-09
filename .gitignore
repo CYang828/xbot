@@ -150,3 +150,6 @@ events*
 *.pkl
 *.pth
 
+*.pkl
+*.pth
+

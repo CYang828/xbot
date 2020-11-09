@@ -9,7 +9,6 @@ from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
 
-import re
 import torch
 from torch import nn
 from transformers import BertModel
