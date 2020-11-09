@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pickle
 
@@ -10,12 +11,10 @@ import torch.nn as nn
 from xbot.util.dst_util import DST
 from xbot.util.state import default_state
 from xbot.util.download import download_from_url
-from xbot.util.path import get_data_path, get_config_path
+from xbot.util.path import get_data_path, get_config_path, get_root_path
 from data.crosswoz.data_process.dst.trade_preprocess import get_slot_information, prepare_data_for_update
 
-import sys
-
-sys.path.append('/xhp/xbot/script/dst/trade')
+sys.path.append(os.path.join(get_root_path(), 'script/dst/trade'))
 
 
 class EncoderRNN(nn.Module):
@@ -388,8 +387,13 @@ class TradeDST(DST):
 
 if __name__ == '__main__':
     import random
+
     dst_model = TradeDST()
     data_path = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
+    dials_path = os.path.join(data_path, 'dev_dials.json')
+    # download dials file
+    if not os.path.exists(dials_path):
+        download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/dev_dials.json', dials_path)
     with open(os.path.join(data_path, 'dev_dials.json'), 'r', encoding='utf8') as f:
         dials = json.load(f)
         example = random.choice(dials)
