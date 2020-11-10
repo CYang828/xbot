@@ -1,0 +1,10 @@
+{
+  "random_seed": 2019,
+  "output_dir": "output/policy",
+  "batch_size": 32,
+  "print_per_batch": 400,
+  "learning_rate": 0.001,
+  "load_model_name": "",
+  "num_epochs": 20,
+  "do_train": 1
+}
