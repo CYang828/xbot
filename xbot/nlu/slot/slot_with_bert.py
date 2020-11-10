@@ -99,7 +99,7 @@ class SlotWithBert(nn.Module):
 class SlotWithBertPredictor(NLU):
     """NLU slot Extraction with Bert 预测器"""
 
-    default_model_config = 'crosswoz_all_context_nlu_slot.json'
+    default_model_config = 'nlu/crosswoz_all_context_nlu_slot.json'
     default_model_name = 'pytorch-slot-with-bert.pt'
     default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-slot-with-bert.pt'
 
