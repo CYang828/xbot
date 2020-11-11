@@ -51,6 +51,7 @@ class DataPreprocessor:
                     if turn['role'] == 'usr':
                         dst.update(usr_da=turn['dialog_act'])
                         if i + 2 == len(sess):
+                            # 为什么要提前设置呢
                             dst.state['terminated'] = True
                     else:
                         for domain, svs in turn['sys_state'].items():
