@@ -69,11 +69,20 @@ class RulePolicy(Policy):
             # elif slot.startswith('周边'):
             #     for v in value[:int(len(value) * 0.7)]:
             #         sys_da.append(['Inform', domain, slot, v])
-            elif slot == '评分' and value is not None:
-                value = str(int(value)) if value == int(value) else str(value)
+            elif slot == '评分':
+                if value is None:
+                    value = '无'
+                else:
+                    value = str(int(value)) if value == int(value) else str(value)
                 sys_da.append(['Inform', domain, slot, value + '分'])
             elif slot == ['价格', '人均消费']:
                 sys_da.append(['Inform', domain, slot, str(value) + '元'])
+            elif slot == '门票':
+                if value is None or int(value) == 0:
+                    value = '免费'
+                elif int(value) > 0:
+                    value = str(value) + '元'
+                sys_da.append(['Inform', domain, slot, value])
             elif slot == '电话':
                 value = value.split(',')
                 value = ' '.join(value)
@@ -82,6 +91,9 @@ class RulePolicy(Policy):
                 sys_da.append(['Inform', domain, slot, value])
 
         for intent, domain, slot, value in usr_das:
+            # 提高 f1 和 recall, joint acc 降低
+            # if intent == 'Inform' and slot == '名称':
+            #     sys_da.append([intent, domain, slot, value])
             if intent == 'General':
                 # if domain == 'greet':
                 #     sys_da.append(['General', 'greet', 'none', 'none'])

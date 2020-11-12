@@ -93,7 +93,7 @@ def main():
 
     f1, precision, recall, joint_acc = eval_metrics(sys_state_action_pairs)
     print(f'f1: {f1:.3f}, precision: {precision:.3f}, recall: {recall:.3f}, joint_acc: {joint_acc:.3f}')
-    # f1: 0.621, precision: 0.550, recall: 0.713, joint_acc: 0.641
+    # f1: 0.628, precision: 0.556, recall: 0.721, joint_acc: 0.647
 
 
 if __name__ == '__main__':
@@ -107,5 +107,5 @@ if __name__ == '__main__':
    但是去掉这个规则，指标却更高，大概是规则还需完善
 3. 以周边开始的 slot 也存在数量不确定问题
 4. 数据集本身的问题，比如 dialogue act 没有正确对应 utterance，比如 11184 对话
-5. 门票问题
+5. 门票问题，有时候 0 就是 0，不用改写成 免费
 """
