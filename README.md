@@ -1,6 +1,9 @@
 # XBot
 This is a chatbot for X.
 
+<img align="right" height="244" src="asset/xbot.jpg">
+
+
 ## Quick Start
 ```
 git clone https://github.com/BSlience/xbot.git
