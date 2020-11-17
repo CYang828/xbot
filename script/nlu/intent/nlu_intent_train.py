@@ -27,7 +27,7 @@ if __name__ == '__main__':
                  'intent_test_data.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json'}
     # load config
     root_path = get_root_path()
-    config_path = os.path.join(get_config_path(), 'crosswoz_all_context_nlu_intent.json')
+    config_path = os.path.join(os.path.join(get_config_path(), 'nlu'),'crosswoz_all_context_nlu_intent.json')
     config = json.load(open(config_path))
     data_path = os.path.join(get_data_path(), 'crosswoz/nlu_intent_data/')
     output_dir = config['output_dir']
