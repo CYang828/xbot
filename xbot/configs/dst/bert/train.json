@@ -6,9 +6,10 @@
   "train_batch_size": 8,
   "dev_batch_size": 8,
   "test_batch_size": 8,
-  "num_epochs": 5,
+  "num_epochs": 3,
   "debug": 1,
   "use_cache_data": 0,
   "eval_metric": "turn_inform",
-  "num_processes": 5
+  "num_processes": 2,
+  "num_workers": 4
 }

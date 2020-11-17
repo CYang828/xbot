@@ -1,11 +1,12 @@
 import os
 import json
+import time
 import random
 import warnings
 from copy import deepcopy
 from functools import partial
 from collections import defaultdict
-# from multiprocessing import Manager, Pool
+from multiprocessing import Manager, Pool
 
 from tqdm import tqdm, trange
 
@@ -14,14 +15,14 @@ import torch.nn as nn
 import torch.optim as opt
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
-from torch.multiprocessing import Pool, Manager, Process
 
 from transformers import BertTokenizer, BertConfig
 from transformers import BertForSequenceClassification
 
+from script.dst.bert.utils import eval_metrics
 from xbot.util.download import download_from_url
-from script.dst.bert.utils import DSTDataset, collate_fn, eval_metrics
 from xbot.util.path import get_data_path, get_root_path, get_config_path
+from data.crosswoz.data_process.dst.bert_preprocess import turn2examples, DSTDataset, collate_fn
 
 warnings.simplefilter('ignore')
 
@@ -30,42 +31,38 @@ class Trainer:
 
     def __init__(self, config):
         self.config = config
-        self.model_config = BertConfig.from_pretrained(config['config'])
-        self.model = BertForSequenceClassification.from_pretrained(config['pytorch_model'],
-                                                                   config=self.model_config)
         self.tokenizer = BertTokenizer.from_pretrained(config['vocab'])
-        self.ontology = json.load(open(config['ontology'], 'r', encoding='utf8'))
-
-        self.optimizer = opt.AdamW(self.model.parameters(), lr=config['learning_rate'])
-
-        self.model.to(config['device'])
-        if config['n_gpus'] > 1:
-            self.model = nn.DataParallel(self.model)
-
+        self.ontology = json.load(open(config['cleaned_ontology'], 'r', encoding='utf8'))
+        start_time = time.time()
+        self.train_dataloader = self.load_data(data_path=self.config['train4bert_dst'], data_type='train')
+        self.eval_dataloader = self.load_data(data_path=self.config['dev4bert_dst'], data_type='dev')
+        self.test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='test')
+        elapsed = time.time() - start_time
+        print(f'Loading data cost {elapsed}s ...')
         self.best_model_path = None
+        self.model = None
+        self.model_config = None
+        self.optimizer = None
 
-    def turn2examples(self, domain, slot, value, context_ids,
-                      triple_labels, belief_state, dial_id, turn_id):
-        candidate = domain + '-' + slot + ' = ' + value
-        candidate_ids = self.tokenizer.encode(candidate, add_special_tokens=False)
-        input_ids = ([self.tokenizer.cls_token_id] + context_ids + [self.tokenizer.sep_token_id]
-                     + candidate_ids + [self.tokenizer.sep_token_id])
-        token_type_ids = [0] + [0] * len(context_ids) + [0] + [1] * len(candidate_ids) + [1]
-        label = int((domain, slot, value) in triple_labels)
+    def set_model(self):
+        self.model_config = BertConfig.from_pretrained(self.config['config'])
+        self.model = BertForSequenceClassification.from_pretrained(self.config['pytorch_model'],
+                                                                   config=self.model_config)
+        self.optimizer = opt.AdamW(self.model.parameters(), lr=self.config['learning_rate'])
 
-        return (input_ids, token_type_ids, label, dial_id,
-                str(turn_id), domain, slot, value, belief_state)
+        self.model.to(self.config['device'])
+        if self.config['n_gpus'] > 1:
+            self.model = nn.DataParallel(self.model)
 
     @staticmethod
     def get_pos_neg_examples(example, pos_examples, neg_examples):
-        if example[2] == 1:
+        if example[-3] == 1:
             pos_examples.append(example)
         else:
             neg_examples.append(example)
 
     def iter_dials(self, dials, data_type, pos_examples, neg_examples, process_id):
-        for dial_id, dial in tqdm(dials, desc=f'Building {data_type} examples, current process-{process_id}',
-                                  leave=False):
+        for dial_id, dial in tqdm(dials, desc=f'Building {data_type} examples, current process-{process_id}'):
             sys_utter = ''
             for turn_id, turn in enumerate(dial['messages']):
                 if turn['role'] == 'sys':
@@ -88,22 +85,32 @@ class Trainer:
                         if intent == 'Request':
                             triple_labels.add((domain, 'Request', slot))
                         else:
+                            if '-' in slot:  # 酒店设施
+                                slot, value = slot.split('-')
                             triple_labels.add((domain, slot, value))
 
                     for domain_slots, values, in self.ontology.items():
                         domain_slot = domain_slots.split('-')
-                        if len(domain_slot) > 2: continue
                         domain, slot = domain_slot
 
-                        example = self.turn2examples(domain, 'Request', slot, context_ids,
-                                                     triple_labels, belief_state, dial_id, turn_id)
+                        if domain in ['reqmore']:
+                            continue
 
-                        self.get_pos_neg_examples(example, pos_examples, neg_examples)
+                        if domain not in ['greet', 'welcome', 'thank', 'bye'] and slot != '酒店设施':
+                            example = turn2examples(self.tokenizer, domain, 'Request', slot, context_ids,
+                                                    triple_labels, belief_state, dial_id, turn_id)
+                            self.get_pos_neg_examples(example, pos_examples, neg_examples)
 
                         for value in values:
                             value = ''.join(value.split(' '))
-                            example = self.turn2examples(domain, slot, value, context_ids,
-                                                         triple_labels, belief_state, dial_id, turn_id)
+                            if slot == '酒店设施':
+                                slot_value = slot + f'-{value}'
+                                example = turn2examples(self.tokenizer, domain, 'Request', slot_value, context_ids,
+                                                        triple_labels, belief_state, dial_id, turn_id)
+                                self.get_pos_neg_examples(example, pos_examples, neg_examples)
+
+                            example = turn2examples(self.tokenizer, domain, slot, value, context_ids,
+                                                    triple_labels, belief_state, dial_id, turn_id)
 
                             self.get_pos_neg_examples(example, pos_examples, neg_examples)
 
@@ -116,21 +123,14 @@ class Trainer:
         pos_examples = Manager().list()
 
         dials4single_process = (len(dials) - 1) // self.config['num_processes'] + 1
-        # pool = Pool(self.config['num_processes'])
-        pool = []
+        print(f'Single process have {dials4single_process} examples ...')
+        pool = Pool(self.config['num_processes'])
         for i in range(self.config['num_processes']):
-            p = Process(target=self.iter_dials,
-                        args=(dials[dials4single_process * i: dials4single_process * (i + 1)],
-                              data_type, pos_examples, neg_examples, i))
-            p.start()
-            pool.append(p)
-            # pool.apply_async(func=self.iter_dials,
-            #                  args=(dials[dials4single_process * i: dials4single_process * (i + 1)],
-            #                        data_type, pos_examples, neg_examples, i))
-        # pool.close()
-        # pool.join()
-        for p in pool:
-            p.join()
+            pool.apply_async(func=self.iter_dials,
+                             args=(dials[dials4single_process * i: dials4single_process * (i + 1)],
+                                   data_type, pos_examples, neg_examples, i))
+        pool.close()
+        pool.join()
 
         pos_examples = list(pos_examples)
         neg_examples = list(neg_examples)
@@ -151,6 +151,7 @@ class Trainer:
         return examples
 
     def load_data(self, data_path, data_type):
+        print(f'Starting preprocess {data_type} data ...')
         raw_data_name = os.path.basename(data_path)
         processed_data_name = 'processed_' + raw_data_name.split('.')[0] + '.pt'
         data_cache_path = os.path.join(self.config['data_path'], processed_data_name)
@@ -164,13 +165,13 @@ class Trainer:
         shuffle = True if data_type == 'train' else False
         batch_size = self.config[f'{data_type}_batch_size']
         collate = partial(collate_fn, mode=data_type)
-        dataloader = DataLoader(dataset=dataset, batch_size=batch_size,
-                                shuffle=shuffle, num_workers=4, collate_fn=collate)
+        dataloader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=shuffle,
+                                num_workers=self.config['num_workers'], collate_fn=collate)
         return dataloader
 
-    def evaluation(self, eval_dataloader, epoch=None, mode='dev'):
+    def evaluation(self, epoch=None, mode='dev'):
         self.model.eval()
-        eval_bar = tqdm(enumerate(eval_dataloader), total=len(eval_dataloader), desc='Evaluating')
+        eval_bar = tqdm(enumerate(self.eval_dataloader), total=len(self.eval_dataloader), desc='Evaluating')
         results = defaultdict(list)
         with torch.no_grad():
             for step, batch in eval_bar:
@@ -208,22 +209,19 @@ class Trainer:
         return metrics_res[self.config['eval_metric']]
 
     def eval_test(self):
-        test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='test')
         if self.best_model_path is not None:
-            self.model.module.load_state_dict(torch.load(self.best_model_path))
+            self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
             self.model.to(self.config['device'])
-        self.evaluation(test_dataloader, mode='test')
+        self.evaluation(self.test_dataloader, mode='test')
 
     def train(self):
-        train_dataloader = self.load_data(data_path=self.config['train4bert_dst'], data_type='train')
-        eval_dataloader = self.load_data(data_path=self.config['dev4bert_dst'], data_type='dev')
-
+        self.set_model()
         epoch_bar = trange(0, self.config['num_epochs'], desc='Epoch')
         best_metric = 0
 
         for epoch in epoch_bar:
             self.model.train()
-            train_bar = tqdm(enumerate(train_dataloader), total=len(train_dataloader), desc='Training')
+            train_bar = tqdm(enumerate(self.train_dataloader), total=len(self.train_dataloader), desc='Training')
             for step, batch in train_bar:
                 inputs = {k: v.to(self.config['device']) for k, v in batch.items()}
                 loss = self.model(**inputs)[0]
@@ -238,7 +236,7 @@ class Trainer:
 
                 train_bar.set_description(f'Training： Epoch: {epoch}, Iter: {step}, CELoss: {loss.item():.3f}')
 
-            eval_metric = self.evaluation(eval_dataloader, epoch)
+            eval_metric = self.evaluation(epoch)
             if eval_metric > best_metric:
                 print(f'Best model saved, {self.config["eval_metric"]}: {eval_metric} ...')
                 best_metric = eval_metric
@@ -248,10 +246,11 @@ class Trainer:
         if not os.path.exists(self.config['output_dir']):
             os.makedirs(self.config['output_dir'])
 
-        save_name = f'Epoch-{epoch}-JointGoal-{joint_goal:.3f}.pth'
+        save_name = f'Epoch-{epoch}-JointGoal-{joint_goal:.3f}'
         self.best_model_path = os.path.join(self.config['output_dir'], save_name)
         model_to_save = deepcopy(self.model.module if hasattr(self.model, 'module') else self.model)
-        torch.save(model_to_save.cpu().state_dict(), self.best_model_path)
+        model_to_save.cpu().save_pretrained(self.best_model_path)
+        self.tokenizer.save_pretrained(self.best_model_path)
 
 
 def main():
@@ -262,7 +261,7 @@ def main():
         'train4bert_dst.json': '',
         'dev4bert_dst.json': '',
         'test4bert_dst.json': '',
-        'ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/ontology.json',
+        'cleaned_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/ontology.json',
         'config.json': '',
         'pytorch_model.bin': '',
         'vocab.txt': ''
@@ -302,6 +301,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# TODO ontology 的加载需要处理，比如 "酒店-酒店类型": ["早餐 服务 免费   叫醒 服务"]，要分成两个值，
-#  要么可能单独存在其中一个，或者其中一个没有单独存在的

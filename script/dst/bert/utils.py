@@ -5,72 +5,8 @@ from tqdm import tqdm
 
 import numpy as np
 
-import torch
-from torch.utils.data import Dataset
-
 from xbot.util.path import get_data_path
 from xbot.util.file_util import read_zipped_json
-
-MAX_SEQ_LEN = 512
-
-
-class DSTDataset(Dataset):
-
-    def __init__(self, examples):
-        super(DSTDataset, self).__init__()
-        (self.input_ids, self.token_type_ids, self.labels, self.dialogue_idxs,
-         self.turn_ids, self.domains, self.slots, self.values, self.belief_states) = examples
-
-    def __getitem__(self, index):
-        return (self.input_ids[index], self.token_type_ids[index], self.labels[index], self.dialogue_idxs[index],
-                self.turn_ids[index], self.domains[index], self.slots[index], self.values[index],
-                self.belief_states[index])
-
-    def __len__(self):
-        return len(self.labels)
-
-
-def collate_fn(examples, mode='train'):
-    batch_examples = {}
-    examples = list(zip(*examples))
-    (batch_examples['labels'], batch_examples['dialogue_idxs'], batch_examples['turn_ids'], batch_examples['domains'],
-     batch_examples['slots'], batch_examples['values'], batch_examples['belief_states']) = examples[2:]
-
-    input_ids = examples[0]
-    token_type_ids = examples[1]
-    max_seq_len = min(max(len(input_id) for input_id in input_ids), MAX_SEQ_LEN)
-    input_ids_tensor = torch.zeros((len(input_ids), max_seq_len), dtype=torch.long)
-    token_type_ids_tensor = torch.zeros_like(input_ids_tensor)
-    attention_mask = torch.ones_like(input_ids_tensor)
-
-    for i, input_id in enumerate(input_ids):
-        cur_seq_len = len(input_id)
-        if cur_seq_len <= max_seq_len:
-            input_ids_tensor[i, :cur_seq_len] = torch.tensor(input_id, dtype=torch.long)
-            token_type_ids_tensor[i, :cur_seq_len] = torch.tensor(token_type_ids[i], dtype=torch.long)
-            attention_mask[i, cur_seq_len:] = 0
-        else:
-            input_ids_tensor[i] = torch.tensor(input_id[:max_seq_len - 1] + [102], dtype=torch.long)
-            token_type_ids_tensor[i] = torch.tensor(token_type_ids[i][:max_seq_len], dtype=torch.long)
-
-    data = {
-        'input_ids': input_ids_tensor,
-        'token_type_ids': token_type_ids_tensor,
-        'attention_mask': attention_mask,
-        'labels': torch.tensor(batch_examples['labels'], dtype=torch.long),
-    }
-
-    if mode != 'train':
-        data.update({
-            'dialogue_idxs': batch_examples['dialogue_idxs'],
-            'turn_ids': batch_examples['turn_ids'],
-            'domains': batch_examples['domains'],
-            'slots': batch_examples['slots'],
-            'values': batch_examples['values'],
-            'belief_states': batch_examples['belief_states']
-        })
-
-    return data
 
 
 def get_inf_req(triple_list):
@@ -143,6 +79,39 @@ def merge_raw_date(data_type):
         json.dump(merge_data, f, ensure_ascii=False, indent=2)
 
 
+def clean_ontology():
+    data_path = get_data_path()
+    ontology_path = os.path.join(data_path, 'crosswoz/dst_bert_data/ontology.json')
+    ontology = json.load(open(ontology_path, 'r', encoding='utf8'))
+    cleaned_ontologies = {}
+    facility = []
+    seps = ['、', '，', ',', ';', '或', '；', '   ']
+    for ds, values in tqdm(ontology.items()):
+        if len(ds.split('-')) > 2:
+            facility.append(ds.split('-')[-1])
+            continue
+        if ds.split('-')[-1] == '酒店设施':
+            continue
+        cleaned_values = set()
+        for value in values:
+            multi_values = [value]
+            for sep in seps:
+                if sep in value:
+                    multi_values = value.split(sep)
+                    break
+            for v in multi_values:
+                v = ''.join(v.split())
+                cleaned_values.add(v)
+
+        cleaned_ontologies['酒店-酒店设施'] = facility
+        cleaned_ontologies[ds] = list(cleaned_values)
+
+    cleaned_ontologies_path = os.path.join(data_path, 'crosswoz/dst_bert_data/cleaned_ontology.json')
+    with open(cleaned_ontologies_path, 'w', encoding='utf8') as f:
+        json.dump(cleaned_ontologies, f, ensure_ascii=False, indent=2)
+
+
 if __name__ == '__main__':
-    for data_type in ['train', 'dev', 'test']:
-        merge_raw_date(data_type)
+    # for data_type in ['train', 'dev', 'test']:
+    #     merge_raw_date(data_type)
+    clean_ontology()
