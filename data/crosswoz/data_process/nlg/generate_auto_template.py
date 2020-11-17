@@ -257,10 +257,11 @@ def preprocess():
     print('Length of user_multi_intent_dict: %d' % len(user_multi_intent_dict))
     print('Length of sys_multi_intent_dict: %d' % len(sys_multi_intent_dict))
 
-    with open('auto_user_template_nlg.json', 'w', encoding='utf-8') as f:
+    nlg_data_save_path = os.path.join(cur_dir, '../../../../data/crosswoz/nlg_template_data')
+    with open(os.path.join(nlg_data_save_path,'auto_user_template_nlg.json'), 'w', encoding='utf-8') as f:
         json.dump(user_multi_intent_dict, f, indent=4, sort_keys=True, ensure_ascii=False)
 
-    with open('auto_system_template_nlg.json', 'w', encoding='utf-8') as f:
+    with open(os.path.join(nlg_data_save_path,'auto_system_template_nlg.json'), 'w', encoding='utf-8') as f:
         json.dump(sys_multi_intent_dict, f, indent=4, sort_keys=True, ensure_ascii=False)
 
 

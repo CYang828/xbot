@@ -161,7 +161,7 @@ def get_bleu4(dialog_acts, golden_utts, gen_utts, data_key):
 if __name__ == '__main__':
     # if len(sys.argv) != 2:
     #     print("usage:")
-    #     print("\t python nlg_template_evaluate.py data_key")
+    #     print("\t python evaluate.py data_key")
     #     print("\t data_key=usr/sys")
     #     sys.exit()
     # data_key = sys.argv[1]

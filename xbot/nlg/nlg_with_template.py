@@ -6,8 +6,9 @@ import functools
 import copy
 from collections import defaultdict
 import zipfile
-from xbot.util.nlg_util import NLG
 
+from xbot.util.nlg_util import NLG
+from xbot.util.download import download_from_url
 
 def read_json(filename):
     with open(filename, 'r', encoding='utf-8') as f:
@@ -28,8 +29,18 @@ class TemplateNLG(NLG):
             self.role = 'usr'
         else:
             self.role = 'sys'
+
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         template_dir = os.path.join(cur_dir, '../../data/crosswoz/nlg_template_data')
+        # data_urls = {'auto_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json',
+        #              'auto_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json',
+        #              'manual_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json',
+        #              'manual_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json'}
+        # for data_key, url in data_urls.items():
+        #     nlg_download = os.path.join(os.path.join(template_dir, data_key))
+        #     if not os.path.exists(nlg_download):
+        #         download_from_url(url, nlg_download)
+
         # multi-intent
         self.auto_user_template = read_json(os.path.join(template_dir, 'auto_user_template_nlg.json'))
         self.auto_system_template = read_json(os.path.join(template_dir, 'auto_system_template_nlg.json'))
@@ -83,8 +94,8 @@ class TemplateNLG(NLG):
         except Exception as e:
             print('\n\nError in processing:')
             pprint(copy.deepcopy(dialog_act))
-            # return ''
-            raise e
+            return ''
+            # raise e
 
     def _postprocess(self, sen, last_sen=False):
         sen = sen.strip('。.，, ')
