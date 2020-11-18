@@ -32,14 +32,14 @@ class TemplateNLG(NLG):
 
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         template_dir = os.path.join(cur_dir, '../../data/crosswoz/nlg_template_data')
-        # data_urls = {'auto_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json',
-        #              'auto_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json',
-        #              'manual_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json',
-        #              'manual_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json'}
-        # for data_key, url in data_urls.items():
-        #     nlg_download = os.path.join(os.path.join(template_dir, data_key))
-        #     if not os.path.exists(nlg_download):
-        #         download_from_url(url, nlg_download)
+        data_urls = {'auto_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/auto_user_template_nlg.json',
+                     'auto_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/auto_system_template_nlg.json',
+                     'manual_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/manual_user_template_nlg.json',
+                     'manual_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/manual_system_template_nlg.json'}
+        for data_key, url in data_urls.items():
+            nlg_download = os.path.join(os.path.join(template_dir, data_key))
+            if not os.path.exists(nlg_download):
+                download_from_url(url, nlg_download)
 
         # multi-intent
         self.auto_user_template = read_json(os.path.join(template_dir, 'auto_user_template_nlg.json'))
