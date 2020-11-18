@@ -2,7 +2,7 @@ import os
 import json
 import random
 
-from xbot.gl import DEFAULT_MODEL_PATH
+from xbot.constants import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.nlu.intent.intent_with_bert import IntentWithBert, IntentWithBertPredictor
 from xbot.util.download import download_from_url

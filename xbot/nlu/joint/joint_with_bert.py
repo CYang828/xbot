@@ -2,7 +2,7 @@ import os
 import json
 from typing import Any
 
-from xbot.gl import DEFAULT_MODEL_PATH
+from xbot.constants import DEFAULT_MODEL_PATH
 from xbot.util.nlu_util import NLU
 from xbot.util.path import get_root_path
 from xbot.util.download import download_from_url
@@ -131,7 +131,7 @@ class JointWithBertPredictor(NLU):
 
     def __init__(self):
         root_path = get_root_path()
-        config_file = os.path.join(root_path, 'xbot/configs/{}'.format(JointWithBertPredictor.default_model_config))
+        config_file = os.path.join(root_path, 'xbot/config/{}'.format(JointWithBertPredictor.default_model_config))
         config = json.load(open(config_file))
         device = config['DEVICE']
         data_dir = os.path.join(root_path, config['data_dir'])
