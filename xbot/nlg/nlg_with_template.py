@@ -10,7 +10,6 @@ import zipfile
 from xbot.util.nlg_util import NLG
 from xbot.util.download import download_from_url
 
-
 def read_json(filename):
     with open(filename, 'r', encoding='utf-8') as f:
         return json.load(f)
@@ -33,10 +32,10 @@ class TemplateNLG(NLG):
 
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         template_dir = os.path.join(cur_dir, '../../data/crosswoz/nlg_template_data')
-        data_urls = {'auto_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json',
-                     'auto_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json',
-                     'manual_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json',
-                     'manual_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json'}
+        data_urls = {'auto_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/auto_user_template_nlg.json',
+                     'auto_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/auto_system_template_nlg.json',
+                     'manual_user_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/manual_user_template_nlg.json',
+                     'manual_system_template_nlg.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/manual_system_template_nlg.json'}
         for data_key, url in data_urls.items():
             nlg_download = os.path.join(os.path.join(template_dir, data_key))
             if not os.path.exists(nlg_download):
@@ -51,6 +50,7 @@ class TemplateNLG(NLG):
 
     def generate(self, dialog_act):
         """
+
         :param dialog_act: [["Request", "景点", "名称", ""], ["Inform", "景点", "门票", "免费"], ...]
         :return: a sentence
         """
@@ -90,6 +90,7 @@ class TemplateNLG(NLG):
 
             else:
                 raise Exception("\n\nInvalid mode! available mode: auto, manual, auto_manual")
+
         except Exception as e:
             print('\n\nError in processing:')
             pprint(copy.deepcopy(dialog_act))
@@ -146,8 +147,7 @@ class TemplateNLG(NLG):
             return base_intent
         elif repetition > 1:
             try:
-                return base_intent + '1+' + '+'.join(
-                    [base_intent.split('+')[-1] + str(i) for i in range(2, repetition + 1)])
+                return base_intent + '1+' + '+'.join([base_intent.split('+')[-1] + str(i) for i in range(2, repetition + 1)])
             except:
                 print(base_intent, repetition)
         else:
@@ -164,13 +164,11 @@ class TemplateNLG(NLG):
             if intent not in template.keys() and '1' in intent:
                 base_intent = '+'.join(intent.split('+')[:3]).strip('1')
                 repetition = len(intent.split('+')) - 2 - 1  # times of repetition - 1
-                while self._multi_same_intent_process(base_intent,
-                                                      repetition) not in template.keys() and repetition >= 1:
+                while self._multi_same_intent_process(base_intent, repetition) not in template.keys() and repetition >= 1:
                     repetition -= 1
                 if len(intent.split('+')) - 2 - repetition >= 1:
                     intent_list = [self._multi_same_intent_process(base_intent,
-                                                                   len(intent.split(
-                                                                       '+')) - 2 - repetition)] + intent_list
+                                                                   len(intent.split('+')) - 2 - repetition)] + intent_list
                 intent = self._multi_same_intent_process(base_intent, repetition)
             elif 'Inform' in intent and '无' in intent:
                 intent = 'Inform+主体+属性+无'
@@ -187,9 +185,9 @@ class TemplateNLG(NLG):
         intent_list = self._prepare_intent_string_list(copy.deepcopy(dialog_act))
         multi_intent = '*'.join(intent_list)
         try:
-            sentences = random.choice(template[multi_intent])  # 一句话中带有dialog_act
+            sentences = random.choice(template[multi_intent]) #一句话中带有dialog_act
             # slot replacement:
-            sentences = self._value_replace(sentences, copy.deepcopy(dialog_act))  # 将一句话中的dialog_act进行替换
+            sentences = self._value_replace(sentences, copy.deepcopy(dialog_act)) #将一句话中的dialog_act进行替换
 
         except Exception as e:  # todo address the error
             # if multi_intent not in template.keys():
@@ -458,3 +456,4 @@ def example():
 if __name__ == '__main__':
     nlg = TemplateNLG(is_user=True)
     print(nlg.generate([['Inform', '地铁', '出发地', '云峰山'], ['Request', '地铁', '目的地附近地铁站', '']]))
+
