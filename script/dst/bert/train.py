@@ -6,7 +6,7 @@ import warnings
 from copy import deepcopy
 from functools import partial
 from collections import defaultdict
-from multiprocessing import Manager, Pool
+from concurrent import futures
 
 from tqdm import tqdm, trange
 
@@ -15,6 +15,7 @@ import torch.nn as nn
 import torch.optim as opt
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
+from torch.multiprocessing import Manager, Pool
 
 from transformers import BertTokenizer, BertConfig
 from transformers import BertForSequenceClassification
@@ -119,6 +120,12 @@ class Trainer:
         dials = list(dials.items())
         if self.config['debug']:
             dials = dials[:self.config['num_processes']]
+
+        num_orig_dials = len(dials)
+        num_sampling_dials = int(len(dials) * self.config['overall_undersampling_ratio'])
+        dials = random.sample(dials, k=num_sampling_dials)
+        print(f'After overall undersampling, {num_orig_dials} dialogues reduce to {num_sampling_dials} ...')
+
         neg_examples = Manager().list()
         pos_examples = Manager().list()
 
@@ -134,6 +141,7 @@ class Trainer:
 
         pos_examples = list(pos_examples)
         neg_examples = list(neg_examples)
+
         examples = pos_examples + neg_examples
         print(f'{len(dials)} dialogs generate {len(examples)} examples ...')
         print(f'[neg:pos]: {len(neg_examples) / len(pos_examples)}')
@@ -144,7 +152,6 @@ class Trainer:
             print(f'After undersampling, remain total {len(examples)} examples')
 
         random.shuffle(examples)
-
         examples = list(zip(*examples))
         torch.save(examples, data_cache_path)
 

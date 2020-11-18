@@ -3,7 +3,7 @@ import json
 from typing import Any
 
 from xbot.util.nlu_util import NLU
-from xbot.gl import DEFAULT_MODEL_PATH
+from xbot.constants import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader

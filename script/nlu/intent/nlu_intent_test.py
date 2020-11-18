@@ -2,8 +2,7 @@ import os
 import json
 import random
 
-
-from xbot.gl import DEFAULT_MODEL_PATH
+from xbot.constants import DEFAULT_MODEL_PATH
 from xbot.util.path import get_root_path, get_config_path, get_data_path
 from xbot.nlu.intent.intent_with_bert import IntentWithBert, IntentWithBertPredictor
 from xbot.util.download import download_from_url
@@ -12,6 +11,7 @@ from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent, ca
 
 import torch
 import numpy as np
+
 
 def set_seed(seed):
     random.seed(seed)
@@ -43,14 +43,15 @@ if __name__ == '__main__':
 
     set_seed(config['seed'])
 
-    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'),encoding="utf-8"))
+    intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'), encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
     for data_key in ['val', 'test']:
-        dataloader.load_data(json.load(open(os.path.join(data_dir, 'intent_{}_data.json'.format(data_key)),encoding="utf-8")),
-                             data_key,
-                             cut_sen_len=0,
-                             use_bert_tokenizer=config['use_bert_tokenizer'])
+        dataloader.load_data(
+            json.load(open(os.path.join(data_dir, 'intent_{}_data.json'.format(data_key)), encoding="utf-8")),
+            data_key,
+            cut_sen_len=0,
+            use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
 
     if not os.path.exists(output_dir):
@@ -59,7 +60,8 @@ if __name__ == '__main__':
         os.makedirs(log_dir)
 
     # load best model
-    best_model_path = os.path.join(os.path.join(root_path,DEFAULT_MODEL_PATH),IntentWithBertPredictor.default_model_name)
+    best_model_path = os.path.join(os.path.join(root_path, DEFAULT_MODEL_PATH),
+                                   IntentWithBertPredictor.default_model_name)
     if not os.path.exists(best_model_path):
         download_from_url(IntentWithBertPredictor.default_model_url,
                           best_model_path)
