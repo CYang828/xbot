@@ -6,7 +6,6 @@ import warnings
 from copy import deepcopy
 from functools import partial
 from collections import defaultdict
-from concurrent import futures
 
 from tqdm import tqdm, trange
 
@@ -64,56 +63,81 @@ class Trainer:
 
     def iter_dials(self, dials, data_type, pos_examples, neg_examples, process_id):
         for dial_id, dial in tqdm(dials, desc=f'Building {data_type} examples, current process-{process_id}'):
-            sys_utter = ''
+            sys_utter = '对话开始'
             for turn_id, turn in enumerate(dial['messages']):
                 if turn['role'] == 'sys':
                     sys_utter = turn['content']
                 else:
-                    belief_state = []
-                    for bs in turn['belief_state']:
-                        domain, slot = bs['slots'][0][0].split('-')
-                        value = ''.join(bs['slots'][0][1].split(' '))
-                        belief_state.append((domain, slot, value))
+                    belief_state = self.format_belief_state(turn)
 
                     usr_utter = turn['content']
                     context = sys_utter + self.tokenizer.sep_token + usr_utter
                     context_ids = self.tokenizer.encode(context, add_special_tokens=False)
 
-                    turn_labels = turn['dialog_act']
-                    triple_labels = set()
-                    for usr_da in turn_labels:
-                        intent, domain, slot, value = usr_da
-                        if intent == 'Request':
-                            triple_labels.add((domain, 'Request', slot))
-                        else:
-                            if '-' in slot:  # 酒店设施
-                                slot, value = slot.split('-')
-                            triple_labels.add((domain, slot, value))
+                    triple_labels = self.format_labels(turn)
 
-                    for domain_slots, values, in self.ontology.items():
-                        domain_slot = domain_slots.split('-')
-                        domain, slot = domain_slot
+                    cur_pos_examples, cur_neg_examples = self.ontology2examples(belief_state, context_ids, dial_id,
+                                                                                triple_labels, turn_id)
 
-                        if domain in ['reqmore']:
-                            continue
+                    pos_examples.extend(cur_pos_examples)
+                    neg_examples.extend(cur_neg_examples)
 
-                        if domain not in ['greet', 'welcome', 'thank', 'bye'] and slot != '酒店设施':
-                            example = turn2examples(self.tokenizer, domain, 'Request', slot, context_ids,
-                                                    triple_labels, belief_state, dial_id, turn_id)
-                            self.get_pos_neg_examples(example, pos_examples, neg_examples)
+    @staticmethod
+    def format_belief_state(turn):
+        belief_state = []
+        for bs in turn['belief_state']:
+            domain, slot = bs['slots'][0][0].split('-')
+            value = ''.join(bs['slots'][0][1].split(' '))
+            belief_state.append((domain, slot, value))
+        return belief_state
 
-                        for value in values:
-                            value = ''.join(value.split(' '))
-                            if slot == '酒店设施':
-                                slot_value = slot + f'-{value}'
-                                example = turn2examples(self.tokenizer, domain, 'Request', slot_value, context_ids,
-                                                        triple_labels, belief_state, dial_id, turn_id)
-                                self.get_pos_neg_examples(example, pos_examples, neg_examples)
+    def ontology2examples(self, belief_state, context_ids, dial_id, triple_labels, turn_id):
+        pos_examples = []
+        neg_examples = []
 
-                            example = turn2examples(self.tokenizer, domain, slot, value, context_ids,
-                                                    triple_labels, belief_state, dial_id, turn_id)
+        for domain_slots, values, in self.ontology.items():
+            domain_slot = domain_slots.split('-')
+            domain, slot = domain_slot
 
-                            self.get_pos_neg_examples(example, pos_examples, neg_examples)
+            if domain in ['reqmore']:
+                continue
+
+            if domain not in ['greet', 'welcome', 'thank', 'bye'] and slot != '酒店设施':
+                example = turn2examples(self.tokenizer, domain, 'Request', slot, context_ids,
+                                        triple_labels, belief_state, dial_id, turn_id)
+                self.get_pos_neg_examples(example, pos_examples, neg_examples)
+
+            for value in values:
+                value = ''.join(value.split(' '))
+                if slot == '酒店设施':
+                    slot_value = slot + f'-{value}'
+                    example = turn2examples(self.tokenizer, domain, 'Request', slot_value, context_ids,
+                                            triple_labels, belief_state, dial_id, turn_id)
+                    self.get_pos_neg_examples(example, pos_examples, neg_examples)
+
+                example = turn2examples(self.tokenizer, domain, slot, value, context_ids,
+                                        triple_labels, belief_state, dial_id, turn_id)
+
+                self.get_pos_neg_examples(example, pos_examples, neg_examples)
+
+        if self.config['random_undersampling']:
+            neg_examples = random.sample(neg_examples, k=len(pos_examples))
+
+        return pos_examples, neg_examples
+
+    @staticmethod
+    def format_labels(turn):
+        turn_labels = turn['dialog_act']
+        triple_labels = set()
+        for usr_da in turn_labels:
+            intent, domain, slot, value = usr_da
+            if intent == 'Request':
+                triple_labels.add((domain, 'Request', slot))
+            else:
+                if '-' in slot:  # 酒店设施
+                    slot, value = slot.split('-')
+                triple_labels.add((domain, slot, value))
+        return triple_labels
 
     def build_examples(self, data_path, data_cache_path, data_type):
         dials = json.load(open(data_path, 'r', encoding='utf8'))
@@ -126,11 +150,22 @@ class Trainer:
         dials = random.sample(dials, k=num_sampling_dials)
         print(f'After overall undersampling, {num_orig_dials} dialogues reduce to {num_sampling_dials} ...')
 
+        neg_examples, pos_examples = self.async_build_examples(data_type, dials)
+
+        examples = pos_examples + neg_examples
+        print(f'{len(dials)} dialogs generate {len(examples)} examples ...')
+
+        random.shuffle(examples)
+        examples = list(zip(*examples))
+        torch.save(examples, data_cache_path)
+
+        return examples
+
+    def async_build_examples(self, data_type, dials):
         neg_examples = Manager().list()
         pos_examples = Manager().list()
-
         dials4single_process = (len(dials) - 1) // self.config['num_processes'] + 1
-        print(f'Single process have {dials4single_process} examples ...')
+        print(f'Single process have {dials4single_process} dials ...')
         pool = Pool(self.config['num_processes'])
         for i in range(self.config['num_processes']):
             pool.apply_async(func=self.iter_dials,
@@ -138,24 +173,9 @@ class Trainer:
                                    data_type, pos_examples, neg_examples, i))
         pool.close()
         pool.join()
-
         pos_examples = list(pos_examples)
         neg_examples = list(neg_examples)
-
-        examples = pos_examples + neg_examples
-        print(f'{len(dials)} dialogs generate {len(examples)} examples ...')
-        print(f'[neg:pos]: {len(neg_examples) / len(pos_examples)}')
-
-        if self.config['random_undersampling']:
-            neg_examples = random.sample(neg_examples, k=len(pos_examples))
-            examples = pos_examples + neg_examples
-            print(f'After undersampling, remain total {len(examples)} examples')
-
-        random.shuffle(examples)
-        examples = list(zip(*examples))
-        torch.save(examples, data_cache_path)
-
-        return examples
+        return neg_examples, pos_examples
 
     def load_data(self, data_path, data_type):
         print(f'Starting preprocess {data_type} data ...')
@@ -191,20 +211,7 @@ class Trainer:
                 preds = logits.argmax(dim=-1).cpu().tolist()
                 labels = inputs['labels'].cpu().tolist()
 
-                pred_labels = []
-                ground_labels = []
-                for i, (pred, label) in enumerate(zip(preds, labels)):
-                    triple = (batch['domains'][i], batch['slots'][i], batch['values'][i])
-                    if pred == 1:
-                        pred_labels.append(triple)
-                    if label == 1:
-                        ground_labels.append(triple)
-
-                results['pred_labels'].extend(pred_labels)
-                results['ground_labels'].extend(ground_labels)
-                results['belief_states'].extend(batch['belief_states'])
-                results['dialogue_idxs'].extend(batch['dialogue_idxs'])
-                results['turn_ids'].extend(batch['turn_ids'])
+                self.format_results(batch, labels, preds, results)
 
                 desc = f'Evaluating： Epoch: {epoch}, ' if mode == 'dev' else 'Best model, '
                 desc += f'CELoss: {loss.item():.3f}'
@@ -214,6 +221,22 @@ class Trainer:
         print('*' * 10 + ' eval metrics ' + '*' * 10)
         print(json.dumps(metrics_res, indent=2))
         return metrics_res[self.config['eval_metric']]
+
+    @staticmethod
+    def format_results(batch, labels, preds, results):
+        pred_labels = []
+        ground_labels = []
+        for i, (pred, label) in enumerate(zip(preds, labels)):
+            triple = (batch['domains'][i], batch['slots'][i], batch['values'][i])
+            if pred == 1:
+                pred_labels.append(triple)
+            if label == 1:
+                ground_labels.append(triple)
+        results['pred_labels'].extend(pred_labels)
+        results['ground_labels'].extend(ground_labels)
+        results['belief_states'].extend(batch['belief_states'])
+        results['dialogue_idxs'].extend(batch['dialogue_idxs'])
+        results['turn_ids'].extend(batch['turn_ids'])
 
     def eval_test(self):
         if self.best_model_path is not None:
@@ -238,7 +261,7 @@ class Trainer:
 
                 self.model.zero_grad()
                 loss.backward()
-                clip_grad_norm_(self.model.parameters(), max_norm=self.config['max_grad_norm'])
+                # clip_grad_norm_(self.model.parameters(), max_norm=self.config['max_grad_norm'])
                 self.optimizer.step()
 
                 train_bar.set_description(f'Training： Epoch: {epoch}, Iter: {step}, CELoss: {loss.item():.3f}')
@@ -249,11 +272,11 @@ class Trainer:
                 best_metric = eval_metric
                 self.save(epoch, best_metric)
 
-    def save(self, epoch, joint_goal):
+    def save(self, epoch, best_metric):
         if not os.path.exists(self.config['output_dir']):
             os.makedirs(self.config['output_dir'])
 
-        save_name = f'Epoch-{epoch}-JointGoal-{joint_goal:.3f}'
+        save_name = f'Epoch-{epoch}-{self.config["eval_metric"]}-{best_metric:.3f}'
         self.best_model_path = os.path.join(self.config['output_dir'], save_name)
         model_to_save = deepcopy(self.model.module if hasattr(self.model, 'module') else self.model)
         model_to_save.cpu().save_pretrained(self.best_model_path)
@@ -265,13 +288,13 @@ def main():
     common_config_name = 'dst/bert/common.json'
 
     data_urls = {
-        'train4bert_dst.json': '',
-        'dev4bert_dst.json': '',
-        'test4bert_dst.json': '',
-        'cleaned_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/ontology.json',
-        'config.json': '',
-        'pytorch_model.bin': '',
-        'vocab.txt': ''
+        'train4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train4bert_dst.json',
+        'dev4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/dev4bert_dst.json',
+        'test4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test4bert_dst.json',
+        'cleaned_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/cleaned_ontology.json',
+        'config.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/config.json',
+        'pytorch_model.bin': 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_model.bin',
+        'vocab.txt': 'http://qiw2jpwfc.hn-bkt.clouddn.com/vocab.txt'
     }
 
     # load config

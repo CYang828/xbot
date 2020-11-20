@@ -33,7 +33,7 @@ def preprocess(mode):
 
     context_size = 3
     #BERT-wwm-ext是哈工大讯飞联合实验室发布的中文预训练模型
-    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
+    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert_policy-wwm-ext")
 
     for key in data_key:
         processed_data[key] = []

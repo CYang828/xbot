@@ -1,5 +1,6 @@
 import os
 import json
+from collections import defaultdict
 
 from tqdm import tqdm
 
@@ -12,11 +13,12 @@ from xbot.util.file_util import read_zipped_json
 def get_inf_req(triple_list):
     request = set()
     inform = set()
-    for d, s, v in triple_list:
-        if s == 'Request':
-            request.add((d, s, v))
+    for triple in triple_list:
+        slot = triple[1]
+        if slot == 'Request':
+            request.add(triple)
         else:
-            inform.add((d, s, v))
+            inform.add(triple)
     return request, inform
 
 
@@ -35,7 +37,9 @@ def eval_metrics(model_output):
         eval_results_dict[dialogue_idx][turn_id]['preds'].append(pred)
         eval_results_dict[dialogue_idx][turn_id]['labels'].append(label)
 
+    inform_request_dict = {}
     for dialogue_idx, dia in eval_results_dict.items():
+        turn_dict = defaultdict(dict)
         for turn_id, turn in dia.items():
             preds = turn['preds']
             labels = turn['labels']
@@ -43,6 +47,10 @@ def eval_metrics(model_output):
             gold_request, gold_inform = get_inf_req(labels)
             pred_request, pred_inform = get_inf_req(preds)
 
+            turn_dict[turn_id]['pred_inform'] = [list(dsv) for dsv in pred_inform]
+            turn_dict[turn_id]['gold_inform'] = [list(dsv) for dsv in gold_inform]
+            turn_dict[turn_id]['pred_request'] = [list(dsv) for dsv in pred_request]
+            turn_dict[turn_id]['gold_request'] = [list(dsv) for dsv in gold_request]
             request.append(gold_request == pred_request)
             inform.append(gold_inform == pred_inform)
 
@@ -51,8 +59,13 @@ def eval_metrics(model_output):
             gold_recovered = set(turn['belief_state'])
             joint_goal.append(pred_recovered == gold_recovered)
 
-    return {'turn_inform': round(np.mean(inform), 3), 'turn_request': round(np.mean(request), 3),
-            'joint_goal': round(np.mean(joint_goal), 3)}
+        inform_request_dict.update({dialogue_idx: turn_dict})
+
+    with open('bad_cases.json', 'w', encoding='utf8') as f:
+        json.dump(inform_request_dict, f, indent=2, ensure_ascii=False)
+
+    return {'turn_inform': round(float(np.mean(inform)), 3), 'turn_request': round(float(np.mean(request)), 3),
+            'joint_goal': round(float(np.mean(joint_goal)), 3)}
 
 
 def merge_raw_date(data_type):
