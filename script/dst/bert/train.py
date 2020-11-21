@@ -39,6 +39,7 @@ class Trainer:
         self.test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='test')
         elapsed = time.time() - start_time
         print(f'Loading data cost {elapsed}s ...')
+
         self.best_model_path = None
         self.model = None
         self.model_config = None
@@ -185,7 +186,7 @@ class Trainer:
         if self.config['use_cache_data'] and os.path.exists(data_cache_path):
             print(f'Loading cache {data_type} data ...')
             examples = torch.load(data_cache_path)
-            print(f'Total {len(examples)} {data_type} examples ...')
+            print(f'Total {len(examples[0])} {data_type} examples ...')
         else:
             examples = self.build_examples(data_path, data_cache_path, data_type)
         dataset = DSTDataset(examples)
@@ -196,10 +197,11 @@ class Trainer:
                                 num_workers=self.config['num_workers'], collate_fn=collate)
         return dataloader
 
-    def evaluation(self, epoch=None, mode='dev'):
+    def evaluation(self, dataloader, epoch=None, mode='dev'):
         self.model.eval()
-        eval_bar = tqdm(enumerate(self.eval_dataloader), total=len(self.eval_dataloader), desc='Evaluating')
-        results = defaultdict(list)
+        eval_bar = tqdm(enumerate(dataloader), total=len(dataloader),
+                        desc='Evaluating' if mode == 'dev' else 'Testing')
+        results = defaultdict(dict)
         with torch.no_grad():
             for step, batch in eval_bar:
                 inputs = {k: v.to(self.config['device']) for k, v in list(batch.items())[:4]}
@@ -224,19 +226,19 @@ class Trainer:
 
     @staticmethod
     def format_results(batch, labels, preds, results):
-        pred_labels = []
-        ground_labels = []
-        for i, (pred, label) in enumerate(zip(preds, labels)):
+        for i, (pred, label, belief_state, dialogue_idx, turn_id) in enumerate(
+                zip(preds, labels, batch['belief_states'],
+                    batch['dialogue_idxs'], batch['turn_ids'])):
+            if turn_id not in results[dialogue_idx]:
+                results[dialogue_idx][turn_id] = {}
+            if 'preds' not in results[dialogue_idx][turn_id]:
+                results[dialogue_idx][turn_id] = {'preds': [], 'labels': [], 'belief_state': belief_state}
+
             triple = (batch['domains'][i], batch['slots'][i], batch['values'][i])
             if pred == 1:
-                pred_labels.append(triple)
+                results[dialogue_idx][turn_id]['preds'].append(triple)
             if label == 1:
-                ground_labels.append(triple)
-        results['pred_labels'].extend(pred_labels)
-        results['ground_labels'].extend(ground_labels)
-        results['belief_states'].extend(batch['belief_states'])
-        results['dialogue_idxs'].extend(batch['dialogue_idxs'])
-        results['turn_ids'].extend(batch['turn_ids'])
+                results[dialogue_idx][turn_id]['labels'].append(triple)
 
     def eval_test(self):
         if self.best_model_path is not None:
@@ -266,18 +268,18 @@ class Trainer:
 
                 train_bar.set_description(f'Training： Epoch: {epoch}, Iter: {step}, CELoss: {loss.item():.3f}')
 
-            eval_metric = self.evaluation(epoch)
+            eval_metric = self.evaluation(self.eval_dataloader, epoch)
             if eval_metric > best_metric:
                 print(f'Best model saved, {self.config["eval_metric"]}: {eval_metric} ...')
                 best_metric = eval_metric
                 self.save(epoch, best_metric)
 
     def save(self, epoch, best_metric):
-        if not os.path.exists(self.config['output_dir']):
-            os.makedirs(self.config['output_dir'])
-
         save_name = f'Epoch-{epoch}-{self.config["eval_metric"]}-{best_metric:.3f}'
         self.best_model_path = os.path.join(self.config['output_dir'], save_name)
+        if not os.path.exists(self.best_model_path):
+            os.makedirs(self.best_model_path)
+
         model_to_save = deepcopy(self.model.module if hasattr(self.model, 'module') else self.model)
         model_to_save.cpu().save_pretrained(self.best_model_path)
         self.tokenizer.save_pretrained(self.best_model_path)
