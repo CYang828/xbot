@@ -174,6 +174,7 @@ class Trainer:
                                    data_type, pos_examples, neg_examples, i))
         pool.close()
         pool.join()
+
         pos_examples = list(pos_examples)
         neg_examples = list(neg_examples)
         return neg_examples, pos_examples
@@ -263,7 +264,7 @@ class Trainer:
 
                 self.model.zero_grad()
                 loss.backward()
-                # clip_grad_norm_(self.model.parameters(), max_norm=self.config['max_grad_norm'])
+                clip_grad_norm_(self.model.parameters(), max_norm=self.config['max_grad_norm'])
                 self.optimizer.step()
 
                 train_bar.set_description(f'Training： Epoch: {epoch}, Iter: {step}, CELoss: {loss.item():.3f}')

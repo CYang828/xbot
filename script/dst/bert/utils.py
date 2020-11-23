@@ -27,6 +27,7 @@ def eval_metrics(model_output):
     request = []
     joint_goal = []
 
+    inform_request_dict = {}
     for dialogue_idx, dia in model_output.items():
         turn_dict = defaultdict(dict)
         for turn_id, turn in dia.items():
@@ -47,6 +48,11 @@ def eval_metrics(model_output):
             pred_recovered = set([(d, s, v) for d, s, v in pred_inform if not s == v == 'none'])
             gold_recovered = set(turn['belief_state'])
             joint_goal.append(pred_recovered == gold_recovered)
+
+        inform_request_dict.update({dialogue_idx: turn_dict})
+
+    with open('bad_cases.json', 'w', encoding='utf8') as f:
+        json.dump(inform_request_dict, f, indent=2, ensure_ascii=False)
 
     return {'turn_inform': round(float(np.mean(inform)), 3), 'turn_request': round(float(np.mean(request)), 3),
             'joint_goal': round(float(np.mean(joint_goal)), 3)}
