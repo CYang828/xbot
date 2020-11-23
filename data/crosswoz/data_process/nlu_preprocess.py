@@ -31,7 +31,7 @@ def preprocess(mode):
     all_intent = []
     all_tag = []
     context_size = 3
-    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
+    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert_policy-wwm-ext")
 
     # generate train, val, test dataset
     for key in data_key:

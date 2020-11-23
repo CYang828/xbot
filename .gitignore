@@ -135,6 +135,8 @@ dmypy.json
 *.log
 data/crosswoz/*_data/
 data/crosswoz/raw
+data/crosswoz/.DS_Store
+data/.DS_Store
 log/*
 output/*
 build/
