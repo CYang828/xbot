@@ -243,7 +243,10 @@ class Trainer:
 
     def eval_test(self):
         if self.best_model_path is not None:
-            self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
+            if hasattr(self.model, 'module'):
+                self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
+            else:
+                self.model = BertForSequenceClassification.from_pretrained(self.best_model_path)
             self.model.to(self.config['device'])
         self.evaluation(self.test_dataloader, mode='test')
 
