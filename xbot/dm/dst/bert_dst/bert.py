@@ -21,10 +21,10 @@ class BertDST(DST):
     common_config_name = 'dst/bert/common.json'
 
     data_urls = {
-        'cleaned_ontology.json': '',
-        'config.json': '',
-        'pytorch_model.bin': '',
-        'vocab.txt': ''
+        'cleaned_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/cleaned_ontology.json',
+        'config.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/bert-dst/config.json',
+        'pytorch_model.bin': 'http://qiw2jpwfc.hn-bkt.clouddn.com/bert-dst/pytorch_model.bin',
+        'vocab.txt': 'http://qiw2jpwfc.hn-bkt.clouddn.com/bert-dst/vocab.txt'
     }
 
     def __init__(self):
@@ -51,8 +51,8 @@ class BertDST(DST):
                 dst = os.path.join(infer_config['data_path'], data_key)
             else:
                 model_dir = os.path.join(infer_config['data_path'], 'trained_model')
+                infer_config['model_dir'] = model_dir
                 if not os.path.exists(model_dir):
-                    infer_config['model_dir'] = model_dir
                     os.makedirs(model_dir)
                 dst = os.path.join(model_dir, data_key)
             file_name = data_key.split('.')[0]
@@ -60,8 +60,9 @@ class BertDST(DST):
             if not os.path.exists(dst):
                 download_from_url(url, dst)
 
-        self.ontology = json.load(open(infer_config['ontology'], 'r', encoding='utf8'))
+        self.ontology = json.load(open(infer_config['cleaned_ontology'], 'r', encoding='utf8'))
         self.model = BertForSequenceClassification.from_pretrained(infer_config['model_dir'])
+        self.model.to(infer_config['device'])
         self.tokenizer = BertTokenizer.from_pretrained(infer_config['model_dir'])
         self.config = infer_config
 
@@ -106,8 +107,8 @@ class BertDST(DST):
         pbar = tqdm(enumerate(dataloader), desc='Inferring')
         with torch.no_grad():
             for step, batch in pbar:
-                inputs = {k: v.to(self.config['device']) for k, v in list(batch.items())}
-                logits = self.model(**inputs)
+                inputs = {k: v.to(self.config['device']) for k, v in list(batch.items())[:3]}
+                logits = self.model(**inputs)[0]
 
                 preds = logits.argmax(dim=-1).cpu().tolist()
 
@@ -129,4 +130,23 @@ class BertDST(DST):
 
 
 if __name__ == '__main__':
-    pass
+    import random
+    dst_model = BertDST()
+    data_path = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
+    with open(os.path.join(data_path, 'dev_dials.json'), 'r', encoding='utf8') as f:
+        dials = json.load(f)
+        example = random.choice(dials)
+        break_turn = 0
+        for ti, turn in enumerate(example['dialogue']):
+            dst_model.state['history'].append(('sys', turn['system_transcript']))
+            dst_model.state['history'].append(('usr', turn['transcript']))
+            if random.random() < 0.5:
+                break_turn = ti + 1
+                break
+    if break_turn == len(example['dialogue']):
+        print('对话已完成，请重新开始测试')
+    print('对话状态更新前：')
+    print(json.dumps(dst_model.state, indent=2, ensure_ascii=False))
+    dst_model.update('')
+    print('对话状态更新后：')
+    print(json.dumps(dst_model.state, indent=2, ensure_ascii=False))

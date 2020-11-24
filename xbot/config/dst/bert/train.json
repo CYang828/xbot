@@ -3,7 +3,6 @@
   "overall_undersampling_ratio": 0.1,
   "learning_rate": 2e-5,
   "max_grad_norm": 10.0,
-  "output_dir": "output/dst/bert",
   "train_batch_size": 32,
   "dev_batch_size": 32,
   "test_batch_size": 32,
