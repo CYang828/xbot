@@ -60,6 +60,7 @@ class BertDST(DST):
             if not os.path.exists(dst):
                 download_from_url(url, dst)
 
+        infer_config['model_dir'] = '/xhp/xbot/output/dst/bert/Epoch-0-turn_inform-0.988'
         self.ontology = json.load(open(infer_config['cleaned_ontology'], 'r', encoding='utf8'))
         self.model = BertForSequenceClassification.from_pretrained(infer_config['model_dir'])
         self.model.to(infer_config['device'])
@@ -78,13 +79,34 @@ class BertDST(DST):
         for domain_slots, values in self.ontology.items():
             domain, slot = domain_slots.split('-')
 
-            example = turn2examples(self.tokenizer, domain, 'Request', slot, context_ids)
-            examples.append(example)
+            if domain in ['reqmore']:
+                continue
+
+            if domain not in ['greet', 'welcome', 'thank', 'bye'] and slot != '酒店设施':
+                example = turn2examples(self.tokenizer, domain, 'Request', slot, context_ids)
+                examples.append(example)
 
             for value in values:
                 value = ''.join(value.split(' '))
+                if slot == '酒店设施':
+                    slot_value = slot + f'-{value}'
+                    example = turn2examples(self.tokenizer, domain, 'Request', slot_value, context_ids)
+                    examples.append(example)
+
                 example = turn2examples(self.tokenizer, domain, slot, value, context_ids)
                 examples.append(example)
+
+        # 如果知道当前 domain，可以仅 request 当前 domain，这里只能随机采样
+        request_examples = []
+        no_request_examples = []
+        for example in examples:
+            if example[-2] == 'Request':
+                request_examples.append(example)
+            else:
+                no_request_examples.append(example)
+        request_examples = random.sample(request_examples, k=int(0.2 * len(request_examples)))
+        examples = request_examples + no_request_examples
+        random.shuffle(examples)
 
         examples = list(zip(*examples))
         dataset = DSTDataset(examples)
@@ -98,11 +120,14 @@ class BertDST(DST):
 
     def update(self, action):
         usr_utter = self.state['history'][-1][1]
+        usr_utter = ''.join(usr_utter.split())
         sys_uttr = ''
         if len(self.state['history']) > 1:
             sys_uttr = self.state['history'][-2][1]
+            sys_uttr = ''.join(sys_uttr.split())
 
         # forward
+        pred_labels = []
         dataloader = self.preprocess(sys_uttr, usr_utter)
         pbar = tqdm(enumerate(dataloader), desc='Inferring')
         with torch.no_grad():
@@ -112,7 +137,6 @@ class BertDST(DST):
 
                 preds = logits.argmax(dim=-1).cpu().tolist()
 
-                pred_labels = []
                 for i, pred in enumerate(preds):
                     triple = (batch['domains'][i], batch['slots'][i], batch['values'][i])
                     if pred == 1:
@@ -131,9 +155,10 @@ class BertDST(DST):
 
 if __name__ == '__main__':
     import random
+
     dst_model = BertDST()
     data_path = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
-    with open(os.path.join(data_path, 'dev_dials.json'), 'r', encoding='utf8') as f:
+    with open(os.path.join(data_path, 'test_dials.json'), 'r', encoding='utf8') as f:
         dials = json.load(f)
         example = random.choice(dials)
         break_turn = 0
