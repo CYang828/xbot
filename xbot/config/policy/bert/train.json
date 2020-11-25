@@ -1,0 +1,11 @@
+{
+  "output_dir": "output/policy/bert",
+  "train_batch_size": 16,
+  "val_batch_size": 16,
+  "test_batch_size": 16,
+  "seed": 2020,
+  "num_epochs": 10,
+  "learning_rate": 2e-5,
+  "num_workers": 4,
+  "use_data_cache": 1
+}
