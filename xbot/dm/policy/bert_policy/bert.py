@@ -1,93 +1,17 @@
 import os
-import json
+import random
 
 import torch
-import torch.nn as nn
 
-from pytorch_lightning import LightningModule
-from pytorch_lightning.metrics import Accuracy, Precision, Recall, Fbeta
+from transformers import BertForSequenceClassification, BertConfig, BertTokenizer
 
-from transformers import BertForSequenceClassification, BertConfig, AdamW
-
+from xbot.util.db_query import Database
 from xbot.util.policy_util import Policy
-from script.policy.bert.utils import DIS_LEN
+from xbot.util.file_util import load_json
+from xbot.util.path import get_config_path
 from xbot.util.download import download_from_url
-from xbot.util.path import get_data_path, get_config_path, get_root_path
-
-
-class BertForDialoguePolicyModel(LightningModule):
-
-    def __init__(self, config):
-        super(BertForDialoguePolicyModel, self).__init__()
-        self.config = config
-        model_config = BertConfig.from_pretrained(config['config'])
-        model_config.num_labels = DIS_LEN
-        self.bert = BertForSequenceClassification.from_pretrained(config['pytorch_model'],
-                                                                  config=model_config)
-        self.loss_fct = nn.BCEWithLogitsLoss()
-        self.train_acc = Accuracy(threshold=0.4)
-        self.valid_acc = Accuracy(threshold=0.4)
-        metric_args = {'num_classes': DIS_LEN, 'threshold': 0.4,
-                       'multilabel': True, 'average': 'macro'}
-        self.valid_precision = Precision(**metric_args)
-        self.valid_recall = Recall(**metric_args)
-        self.valid_f1 = Fbeta(**metric_args)
-
-    def forward(self, input_ids, attention_mask, token_type_ids):
-        logits = self.bert(input_ids=input_ids, attention_mask=attention_mask,
-                           token_type_ids=token_type_ids)[0]
-        return logits
-
-    def training_step(self, batch, batch_idx):
-        loss, probs, labels = self.get_loss(batch)
-        return {'loss': loss, 'preds': probs, 'target': labels}
-
-    def training_step_end(self, outputs):
-        self.train_acc(outputs['preds'], outputs['target'])
-        metric_dict = {'training_loss': outputs['loss'], 'training_acc': self.train_acc}
-        self.log_dict(metric_dict, prog_bar=True, on_epoch=True)
-        # self.log('training_loss', outputs['loss'], on_epoch=True)
-        # self.log('training_acc', self.train_acc, on_epoch=True)
-
-    def get_loss(self, batch):
-        inputs = {k: v.to(self.config['device']) for k, v in list(batch.items())[:4]}
-        labels = inputs.pop('labels')
-        logits = self.bert(**inputs)[0]
-        loss = self.loss_fct(logits, labels)
-        probs = torch.sigmoid(logits)
-        return loss, probs, labels
-
-    def validation_step(self, batch, batch_idx):
-        loss, probs, labels = self.get_loss(batch)
-        return {'loss': loss, 'preds': probs, 'target': labels}
-
-    def validation_epoch_end(self, validation_step_outputs):
-        preds = []
-        target = []
-        for outputs in validation_step_outputs:
-            preds.append(outputs['preds'])
-            target.append(outputs['target'])
-
-        preds = torch.cat(preds, dim=0)
-        target = torch.cat(target, dim=0)
-
-        # TODO: https://github.com/PyTorchLightning/pytorch-lightning/issues/4255
-        self.valid_acc(preds, target)
-        self.valid_precision(preds, target)
-        self.valid_recall(preds, target)
-        self.valid_f1(preds, target)
-
-        metric_dict = {
-            'acc': self.valid_acc,
-            'precision': self.valid_precision,
-            'recall': self.valid_recall,
-            'f1': self.valid_f1
-        }
-        self.log_dict(metric_dict, prog_bar=True)
-
-    def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=self.config['learning_rate'])
-        return optimizer
+from script.policy.bert.utils import NUM_ACT, ACT_ONTOLOGY
+from data.crosswoz.data_process.policy.bert_proprecess import str2id, pad
 
 
 class BertPolicy(Policy):
@@ -103,26 +27,22 @@ class BertPolicy(Policy):
     def __init__(self):
         super(BertPolicy, self).__init__()
         # load config
-        root_path = get_root_path()
         common_config_path = os.path.join(get_config_path(), BertPolicy.common_config_path)
         infer_config_path = os.path.join(get_config_path(), BertPolicy.inference_config_path)
-        common_config = json.load(open(common_config_path))
-        infer_config = json.load(open(infer_config_path))
+        common_config = load_json(common_config_path)
+        infer_config = load_json(infer_config_path)
         infer_config.update(common_config)
         infer_config['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         infer_config['data_path'] = os.path.join(get_data_path(), 'crosswoz/policy_bert_data')
-        infer_config['output_dir'] = os.path.join(root_path, infer_config['output_dir'])
         if not os.path.exists(infer_config['data_path']):
             os.makedirs(infer_config['data_path'])
-        if not os.path.exists(infer_config['output_dir']):
-            os.makedirs(infer_config['output_dir'])
 
         # download data
+        model_dir = os.path.join(infer_config['data_path'], 'Epoch-6-f1-0.902')
+        infer_config['model_dir'] = model_dir
         for data_key, url in BertPolicy.data_urls.items():
-            model_dir = os.path.join(infer_config['data_path'], 'trained_model')
             if not os.path.exists(model_dir):
-                infer_config['model_dir'] = model_dir
                 os.makedirs(model_dir)
             dst = os.path.join(model_dir, data_key)
             file_name = data_key.split('.')[0]
@@ -130,4 +50,160 @@ class BertPolicy(Policy):
             if not os.path.exists(dst):
                 download_from_url(url, dst)
 
-        self.model = BertForDialoguePolicyModel(infer_config)
+        model_config = BertConfig.from_pretrained(infer_config['model_dir'])
+        model_config.num_labels = NUM_ACT
+        self.model = BertForSequenceClassification.from_pretrained(infer_config['model_dir'],
+                                                                   config=model_config)
+        self.tokenizer = BertTokenizer.from_pretrained(infer_config['model_dir'])
+
+        self.model.eval()
+        self.model.to(infer_config['device'])
+
+        self.db = Database()
+        self.config = infer_config
+        self.threshold = infer_config['threshold']
+
+    def preprocess(self, belief_state, cur_domain, history):
+        sys_utter = '对话开始'
+        usr_utter = '对话开始'
+        if len(history) > 0:
+            usr_utter = history[-1][1]
+        if len(history) > 2:
+            sys_utter = history[-2][1]
+
+        source = self.get_source(belief_state, cur_domain)
+        input_ids, token_type_ids = str2id(self.tokenizer, sys_utter, usr_utter, source)
+        attention_mask, input_ids, token_type_ids = pad([input_ids], [token_type_ids])
+
+        return input_ids, token_type_ids, attention_mask
+
+    @staticmethod
+    def get_source(belief_state, cur_domain):
+        """belief_state 要不要换成 sys_state"""
+        if cur_domain is None:
+            return '无结果'
+        source = []
+        for slot, value in belief_state[cur_domain].items():
+            if not value:
+                continue
+            source.append(slot + '是' + value)
+        source = '，'.join(source)
+        if not source:
+            source = '无结果'
+        return source
+
+    def predict(self, state):
+        belief_state = state['belief_state']
+        cur_domain = state['cur_domain']
+        history = state['history']
+        db_res = self.db.query(belief_state, cur_domain)
+        # 数据库中查询出来的结果中同时包括了起点和终点，所以不能随机选择一个
+        if cur_domain != '地铁' and db_res:
+            db_res = random.choice(db_res)[1]
+
+        preds = self.forward(belief_state, cur_domain, history)
+
+        sys_das = []
+        for i, pred in enumerate(preds):
+            if pred == 1:
+                act = ACT_ONTOLOGY[i]
+                if '酒店设施' in act:
+                    domain, intent, slot, facility = act.split('-')
+                    value = '是' if db_res and facility in db_res['酒店设施'] else '否'
+                    # TODO 原本直接使用 slot + facility，应该重新计算指标
+                    sys_das.append([intent, domain, slot + '-' + facility, value])
+                    continue
+                domain, intent, slot = act.split('-')
+                if intent == 'General':
+                    sys_das.append([intent, domain, 'none', 'none'])
+                if domain == cur_domain and db_res:
+                    self.get_sys_das(db_res, domain, intent, slot, sys_das)
+        return sys_das
+
+    def forward(self, belief_state, cur_domain, history):
+        input_ids, token_type_ids, attention_mask = [item.to(self.config['device']) for item
+                                                     in self.preprocess(belief_state, cur_domain, history)]
+        logits = self.model(input_ids=input_ids, token_type_ids=token_type_ids,
+                            attention_mask=attention_mask)[0]
+        probs = torch.sigmoid(logits)[0]
+        preds = (probs > self.threshold).float()
+        return preds
+
+    def get_sys_das(self, db_res, domain, intent, slot, sys_das):
+        if domain == '地铁':
+            if slot == '出发地附近地铁站':
+                value = self.get_metro_das(db_res, '起点')
+                sys_das.append([intent, domain, slot, value])
+            else:
+                value = self.get_metro_das(db_res, '终点')
+                sys_das.append([intent, domain, slot, value])
+        elif domain == '出租':
+            if slot == '车型':
+                sys_das.append([intent, domain, slot, '#CX'])
+            elif slot == '车牌':
+                sys_das.append([intent, domain, slot, '#CP'])
+        else:
+            value = db_res.get(slot, '无')
+            if isinstance(value, list):
+                if not value:
+                    value = '无'
+                else:
+                    value = random.choice(value)
+            sys_das.append([intent, domain, slot, value])
+
+    @staticmethod
+    def get_metro_das(db_res, slot):
+        metros = [res for res in db_res if slot in res[0]]
+        value = '无'
+        if not metros:
+            return value
+        for metro in metros:
+            value = metro[1]['地铁']
+            if value is not None:
+                break
+        return value
+
+
+if __name__ == '__main__':
+    from xbot.dm.dst.rule_dst.rule import RuleDST
+    from xbot.util.path import get_data_path
+    from xbot.util.file_util import read_zipped_json
+    from script.policy.rule.rule_test import eval_metrics
+    from tqdm import tqdm
+
+    rule_dst = RuleDST()
+    bert_policy = BertPolicy()
+    train_path = os.path.join(get_data_path(), 'crosswoz/raw/train.json.zip')
+    train_examples = read_zipped_json(train_path, 'train.json')
+
+    sys_state_action_pairs = {}
+    for id_, dialogue in tqdm(train_examples.items()):
+        sys_state_action_pair = {}
+        sess = dialogue['messages']
+        rule_dst.init_session()
+        for i, turn in enumerate(sess):
+            if turn['role'] == 'usr':
+                rule_dst.update(usr_da=turn['dialog_act'])
+                rule_dst.state['user_action'].clear()
+                rule_dst.state['user_action'].extend(turn['dialog_act'])
+                rule_dst.state['history'].append(['usr', turn['content']])
+                if i + 2 == len(sess):
+                    rule_dst.state['terminated'] = True
+            else:
+                rule_dst.state['history'].append(['sys', turn['content']])
+                for domain, svs in turn['sys_state'].items():
+                    for slot, value in svs.items():
+                        if slot != 'selectedResults':
+                            rule_dst.state['belief_state'][domain][slot] = value
+
+                pred_sys_act = bert_policy.predict(rule_dst.state)
+                sys_state_action_pair[str(i)] = {'gold_sys_act': [tuple(act) for act in turn['dialog_act']],
+                                                 'pred_sys_act': [tuple(act) for act in pred_sys_act]}
+                rule_dst.state['system_action'].clear()
+                rule_dst.state['system_action'].extend(turn['dialog_act'])
+
+        sys_state_action_pairs[id_] = sys_state_action_pair
+
+    f1, precision, recall, joint_acc = eval_metrics(sys_state_action_pairs)
+    print(f'f1: {f1:.3f}, precision: {precision:.3f}, recall: {recall:.3f}, joint_acc: {joint_acc:.3f}')
+#     f1: 0.477, precision: 0.532, recall: 0.431, joint_acc: 0.351

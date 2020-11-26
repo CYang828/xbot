@@ -31,7 +31,7 @@ def to_device(data):
     return data
 
 
-def update_config(common_config_name, train_config_name):
+def update_config(common_config_name, train_config_name, task_path):
     root_path = get_root_path()
     common_config_path = os.path.join(get_config_path(), common_config_name)
     train_config_path = os.path.join(get_config_path(), train_config_name)
@@ -41,7 +41,7 @@ def update_config(common_config_name, train_config_name):
     train_config['n_gpus'] = torch.cuda.device_count()
     train_config['train_batch_size'] = max(1, train_config['n_gpus']) * train_config['train_batch_size']
     train_config['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    train_config['data_path'] = os.path.join(get_data_path(), 'crosswoz/policy_bert_data')
+    train_config['data_path'] = os.path.join(get_data_path(), task_path)
     train_config['output_dir'] = os.path.join(root_path, train_config['output_dir'])
     if not os.path.exists(train_config['data_path']):
         os.makedirs(train_config['data_path'])

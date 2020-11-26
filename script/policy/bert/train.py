@@ -1,28 +1,37 @@
 import os
 import time
+import json
+import random
+from copy import deepcopy
 from functools import partial
 from collections import defaultdict
 
-from transformers import BertTokenizer
+from tqdm import tqdm, trange
 
-import pytorch_lightning as pl
-
+import torch
+import torch.nn as nn
+import torch.optim as opt
 from torch.utils.data import DataLoader
+from torch.nn.utils import clip_grad_norm_
+import pytorch_lightning as pl
+from transformers import BertTokenizer, BertForSequenceClassification, BertConfig
 
 from xbot.util.path import get_data_path
 from xbot.util.train_util import update_config
-from xbot.util.file_util import load_json
-from script.policy.bert.utils import preprocess
 from xbot.util.download import download_from_url
-from xbot.dm.policy.bert_policy.bert import BertForDialoguePolicyModel
-from data.crosswoz.data_process.policy.bert_proprecess import PolicyDataset, collate_fn
+from xbot.util.file_util import load_json, dump_json
+from script.policy.bert.utils import preprocess, ACT_ONTOLOGY, eval_metrics, NUM_ACT, get_joint_acc
+from data.crosswoz.data_process.policy.bert_proprecess import PolicyDataset, collate_fn, str2id
 
 
 class Trainer:
 
     def __init__(self, config):
         self.config = config
-        self.model = BertForDialoguePolicyModel(config)
+        model_config = BertConfig.from_pretrained(config['config'])
+        model_config.num_labels = NUM_ACT
+        self.model = BertForSequenceClassification.from_pretrained(config['pytorch_model'],
+                                                                   config=model_config)
         self.tokenizer = BertTokenizer.from_pretrained(config['vocab'])
 
         start_time = time.time()
@@ -32,16 +41,28 @@ class Trainer:
         elapsed_time = time.time() - start_time
         print(f'Loading data cost {elapsed_time}s ...')
 
+        self.optimizer = opt.AdamW(self.model.parameters(), lr=config['learning_rate'])
+        self.loss_fct = nn.BCEWithLogitsLoss()
+
+        self.model.to(config['device'])
+        if config['n_gpus'] > 1:
+            self.model = nn.DataParallel(self.model)
+
+        self.threshold = config['threshold']
+        self.best_model_path = None
+
     def load_data(self, data_type):
         raw_data_path = os.path.join(self.config['raw_data_path'], f'{data_type}.json.zip')
         filename = f'{data_type}.json'
-        output_path = os.path.join(self.config['output_dir'], filename)
+        output_path = os.path.join(self.config['data_path'], filename)
         if not self.config['use_data_cache']:
             examples = preprocess(raw_data_path, output_path, filename)
         else:
             print(f'Loading {data_type} data from cache ...')
             examples = load_json(output_path)
 
+        if self.config['debug']:
+            examples = random.sample(examples, k=int(len(examples) * 0.1))
         examples_dict = self.get_input_ids(examples)
 
         print(f'Starting building {data_type} dataset ...')
@@ -57,16 +78,8 @@ class Trainer:
         examples_dict = defaultdict(list)
 
         for example in examples:
-            sys_utter_tokens = self.tokenizer.tokenize(example['sys_utter'])
-            usr_utter_tokens = self.tokenizer.tokenize(example['usr_utter'])
-            source_tokens = self.tokenizer.tokenize(example['source'])
-            sys_utter_ids = self.tokenizer.convert_tokens_to_ids(sys_utter_tokens)
-            usr_utter_ids = self.tokenizer.convert_tokens_to_ids(usr_utter_tokens)
-            source_ids = self.tokenizer.convert_tokens_to_ids(source_tokens)
-            input_ids = ([self.tokenizer.cls_token_id] + sys_utter_ids + [self.tokenizer.sep_token_id]
-                         + usr_utter_ids + [self.tokenizer.sep_token_id] + source_ids + [self.tokenizer.sep_token_id])
-            token_type_ids = ([0] + [0] * (len(sys_utter_ids) + 1) + [1] * (len(usr_utter_ids) + 1)
-                              + [0] * (len(source_ids) + 1))
+            input_ids, token_type_ids = str2id(self.tokenizer, example['sys_utter'], example['usr_utter'],
+                                               example['source'])
 
             examples_dict['dial_ids'].append(example['dial_id'])
             examples_dict['turn_ids'].append(example['turn_id'])
@@ -76,13 +89,111 @@ class Trainer:
 
         return examples_dict
 
+    def eval_forward(self, batch):
+        inputs = {k: v.to(self.config['device']) for k, v in list(batch.items())[:4]}
+        labels = inputs.pop('labels')
+        logits = self.model(**inputs)[0]
+        loss = self.loss_fct(logits, labels)
+        if self.config['n_gpus'] > 1:
+            loss = loss.mean()
+        probs = torch.sigmoid(logits)
+        preds = (probs > self.threshold).float()
+        return labels, loss, preds
+
+    @staticmethod
+    def format_results(batch, labels, preds, results):
+        for dial_id, turn_id, pred, label in zip(batch['dial_ids'], batch['turn_ids'],
+                                                 preds, labels):
+            if turn_id not in results[dial_id]:
+                results[dial_id][turn_id] = {}
+            if pred not in results[dial_id][turn_id]:
+                results[dial_id][turn_id] = {'preds': [], 'labels': []}
+
+            for i, (p, la) in enumerate(zip(pred, label)):
+                if p == 1:
+                    results[dial_id][turn_id]['preds'].append(ACT_ONTOLOGY[i])
+                if la == 1:
+                    results[dial_id][turn_id]['labels'].append(ACT_ONTOLOGY[i])
+
+    def evaluation(self, dataloader, epoch=None, mode='dev'):
+        self.model.eval()
+        desc_prefix = 'Evaluating' if mode == 'dev' else 'Testing'
+        eval_bar = tqdm(enumerate(dataloader), total=len(dataloader),
+                        desc=desc_prefix)
+        all_preds = []
+        all_labels = []
+        prediction_results = defaultdict(dict)
+        with torch.no_grad():
+            for step, batch in eval_bar:
+                labels, loss, preds = self.eval_forward(batch)
+                all_preds.append(preds)
+                all_labels.append(labels)
+                self.format_results(batch, labels, preds, prediction_results)
+
+                desc = f'{desc_prefix}： Epoch: {epoch}, ' if mode == 'dev' else 'Best model, '
+                desc += f'BCELoss: {loss.item():.3f}'
+                eval_bar.set_description(desc)
+
+        all_preds = torch.cat(all_preds, dim=0)
+        all_labels = torch.cat(all_labels, dim=0)
+        metrics_res = eval_metrics(all_preds, all_labels)
+
+        joint_acc = get_joint_acc(prediction_results)
+        metrics_res['joint_acc'] = joint_acc
+
+        print('*' * 10 + ' Eval Metrics ' + '*' * 10)
+        print(json.dumps(metrics_res, indent=2))
+        return metrics_res[self.config['eval_metric']], prediction_results
+
     def train(self):
-        pl.seed_everything(self.config['seed'])
-        trainer = pl.Trainer(gpus=self.config['n_gpus'],
-                             accelerator='dp',
-                             max_epochs=self.config['num_epochs'])
-        trainer.fit(self.model, train_dataloader=self.train_dataloader,
-                    val_dataloaders=self.eval_dataloader)
+        epoch_bar = trange(0, self.config['num_epochs'], desc='Epoch')
+        best_metric = 0
+
+        for epoch in epoch_bar:
+            self.model.train()
+            train_bar = tqdm(enumerate(self.train_dataloader), total=len(self.train_dataloader), desc='Training')
+            for step, batch in train_bar:
+                inputs = {k: v.to(self.config['device']) for k, v in batch.items()}
+                labels = inputs.pop('labels')
+                logits = self.model(**inputs)[0]
+                loss = self.loss_fct(logits, labels)
+
+                if self.config['n_gpus'] > 1:
+                    loss = loss.mean()
+
+                self.model.zero_grad()
+                loss.backward()
+                clip_grad_norm_(self.model.parameters(), max_norm=self.config['max_grad_norm'])
+                self.optimizer.step()
+
+                train_bar.set_description(f'Training： Epoch: {epoch}, Iter: {step}, BCELoss: {loss.item():.3f}')
+
+            eval_metric, _ = self.evaluation(self.eval_dataloader, epoch)
+            if eval_metric > best_metric:
+                print(f'Best model saved, {self.config["eval_metric"]}: {eval_metric} ...')
+                best_metric = eval_metric
+                self.save(epoch, best_metric)
+
+    def save(self, epoch, best_metric):
+        save_name = f'Epoch-{epoch}-{self.config["eval_metric"]}-{best_metric:.3f}'
+        self.best_model_path = os.path.join(self.config['output_dir'], save_name)
+        if not os.path.exists(self.best_model_path):
+            os.makedirs(self.best_model_path)
+
+        model_to_save = deepcopy(self.model.module if hasattr(self.model, 'module') else self.model)
+        model_to_save.cpu().save_pretrained(self.best_model_path)
+        self.tokenizer.save_pretrained(self.best_model_path)
+
+    def eval_test(self):
+        if self.best_model_path is not None:
+            if hasattr(self.model, 'module'):
+                self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
+            else:
+                self.model = BertForSequenceClassification.from_pretrained(self.best_model_path)
+            self.model.to(self.config['device'])
+
+        _, prediction_results = self.evaluation(self.test_dataloader, mode='test')
+        dump_json(prediction_results, os.path.join(self.config['data_path'], 'prediction.json'))
 
 
 def main():
@@ -93,12 +204,10 @@ def main():
         'config.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/config.json',
         'pytorch_model.bin': 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_model.bin',
         'vocab.txt': 'http://qiw2jpwfc.hn-bkt.clouddn.com/vocab.txt',
-        'domains.json': '',
-        'intents.json': '',
-        'slots.json': ''
+        'act_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/act_ontology.json',
     }
 
-    train_config = update_config(common_config_name, train_config_name)
+    train_config = update_config(common_config_name, train_config_name, 'crosswoz/policy_bert_data')
     train_config['raw_data_path'] = os.path.join(get_data_path(), 'crosswoz/raw')
 
     # download data
@@ -109,8 +218,11 @@ def main():
         if not os.path.exists(dst):
             download_from_url(url, dst)
 
+    pl.seed_everything(train_config['seed'])
     trainer = Trainer(train_config)
     trainer.train()
+    # trainer.best_model_path = '/xhp/xbot/data/crosswoz/policy_bert_data/Epoch-6-f1-0.902'
+    trainer.eval_test()
 
 
 if __name__ == '__main__':

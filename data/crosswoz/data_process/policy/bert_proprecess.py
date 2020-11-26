@@ -59,3 +59,17 @@ def pad(input_ids, token_type_ids):
             input_ids_tensor[i] = torch.tensor(input_id[:max_seq_len - 1] + [102], dtype=torch.long)
             token_type_ids_tensor[i] = torch.tensor(token_type_ids[i][:max_seq_len], dtype=torch.long)
     return attention_mask, input_ids_tensor, token_type_ids_tensor
+
+
+def str2id(tokenizer, sys_utter, usr_utter, source):
+    sys_utter_tokens = tokenizer.tokenize(sys_utter)
+    usr_utter_tokens = tokenizer.tokenize(usr_utter)
+    source_tokens = tokenizer.tokenize(source)
+    sys_utter_ids = tokenizer.convert_tokens_to_ids(sys_utter_tokens)
+    usr_utter_ids = tokenizer.convert_tokens_to_ids(usr_utter_tokens)
+    source_ids = tokenizer.convert_tokens_to_ids(source_tokens)
+    input_ids = ([tokenizer.cls_token_id] + sys_utter_ids + [tokenizer.sep_token_id]
+                 + usr_utter_ids + [tokenizer.sep_token_id] + source_ids + [tokenizer.sep_token_id])
+    token_type_ids = ([0] + [0] * (len(sys_utter_ids) + 1) + [1] * (len(usr_utter_ids) + 1)
+                      + [0] * (len(source_ids) + 1))
+    return input_ids, token_type_ids
