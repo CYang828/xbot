@@ -13,7 +13,7 @@ from xbot.util.dst_util import DST
 from xbot.util.state import default_state
 from xbot.util.download import download_from_url
 from xbot.util.path import get_data_path, get_root_path, get_config_path
-from data.crosswoz.data_process.dst.bert_preprocess import turn2examples, DSTDataset, collate_fn
+from data.crosswoz.data_process.dst.bert_preprocess import turn2example, DSTDataset, collate_fn
 
 
 class BertDST(DST):
@@ -83,17 +83,17 @@ class BertDST(DST):
                 continue
 
             if domain not in ['greet', 'welcome', 'thank', 'bye'] and slot != '酒店设施':
-                example = turn2examples(self.tokenizer, domain, 'Request', slot, context_ids)
+                example = turn2example(self.tokenizer, domain, 'Request', slot, context_ids)
                 examples.append(example)
 
             for value in values:
                 value = ''.join(value.split(' '))
                 if slot == '酒店设施':
                     slot_value = slot + f'-{value}'
-                    example = turn2examples(self.tokenizer, domain, 'Request', slot_value, context_ids)
+                    example = turn2example(self.tokenizer, domain, 'Request', slot_value, context_ids)
                     examples.append(example)
 
-                example = turn2examples(self.tokenizer, domain, slot, value, context_ids)
+                example = turn2example(self.tokenizer, domain, slot, value, context_ids)
                 examples.append(example)
 
         # 如果知道当前 domain，可以仅 request 当前 domain，这里只能随机采样

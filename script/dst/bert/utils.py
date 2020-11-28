@@ -1,6 +1,7 @@
 import os
 import json
 from collections import defaultdict
+from typing import List, Tuple, Set, Dict
 
 from tqdm import tqdm
 
@@ -10,7 +11,15 @@ from xbot.util.path import get_data_path
 from xbot.util.file_util import read_zipped_json
 
 
-def get_inf_req(triple_list):
+def get_inf_req(triple_list: List[tuple]) -> Tuple[Set[tuple], Set[tuple]]:
+    """Save request type and inform type results respectively according to slot type.
+
+    Args:
+        triple_list: preds or ground truth (domain, slot, value)
+
+    Returns:
+        request, inform triple results
+    """
     request = set()
     inform = set()
     for triple in triple_list:
@@ -22,7 +31,16 @@ def get_inf_req(triple_list):
     return request, inform
 
 
-def eval_metrics(model_output):
+def eval_metrics(model_output: Dict[str, dict]) -> Dict[str, float]:
+    """Calculate `turn_inform` accuracy, `turn_request` accuracy and `joint_goal` accuracy
+
+    Args:
+        model_output: reformatted results containing preds and ground truth
+                      according to dialogue id and turn id
+
+    Returns:
+        metrics
+    """
     inform = []
     request = []
     joint_goal = []
@@ -58,7 +76,12 @@ def eval_metrics(model_output):
             'joint_goal': round(float(np.mean(joint_goal)), 3)}
 
 
-def merge_raw_date(data_type):
+def merge_raw_date(data_type: str) -> None:
+    """Merge belief state data into user turn
+
+    Args:
+        data_type: train, dev or test
+    """
     data_path = get_data_path()
     output_dir = os.path.join(data_path, 'crosswoz/dst_bert_data')
     if not os.path.exists(output_dir):
@@ -82,7 +105,8 @@ def merge_raw_date(data_type):
         json.dump(merge_data, f, ensure_ascii=False, indent=2)
 
 
-def clean_ontology():
+def clean_ontology() -> None:
+    """Clean ontology data."""
     data_path = get_data_path()
     ontology_path = os.path.join(data_path, 'crosswoz/dst_bert_data/ontology.json')
     ontology = json.load(open(ontology_path, 'r', encoding='utf8'))
