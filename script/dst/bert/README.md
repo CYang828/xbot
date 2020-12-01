@@ -105,3 +105,13 @@ example (dev.json, dialogue_id:600, last turn):
 ```
 
 Welcome everyone to open issue！
+
+### new issues
+1. Because of the reasons of undersampling described above, for thousands of unlabeled samples constructed in 
+a round of dialogue in the inference stage, so we can't undersampling them，this leads to inconsistencies in 
+the training and inference stages, we get a high recall but very low precision. This phenomenon also proves that the 
+single-domain `Dialogue State Tracking` method is difficult to apply in cross-domain dataset.
+2. After the above undersampling, the ratio of positive and negative samples is 1:1, so in order to alleviate the gap 
+between the training phase and the inference phase, can we increase the ratio of negative samples appropriately, 
+for example, 1:3 (this ratio is randomly determined , you can try other values at will), 
+after experiments, it is found that it does have a little effect, and the accuracy is slightly improved

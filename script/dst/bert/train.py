@@ -6,6 +6,7 @@ import warnings
 from copy import deepcopy
 from functools import partial
 from collections import defaultdict
+from typing import List, Tuple, Dict, Set, Optional
 
 from tqdm import tqdm, trange
 
@@ -22,14 +23,14 @@ from transformers import BertForSequenceClassification
 from script.dst.bert.utils import eval_metrics
 from xbot.util.download import download_from_url
 from xbot.util.path import get_data_path, get_root_path, get_config_path
-from data.crosswoz.data_process.dst.bert_preprocess import turn2examples, DSTDataset, collate_fn
+from data.crosswoz.data_process.dst.bert_preprocess import turn2example, DSTDataset, collate_fn
 
 warnings.simplefilter('ignore')
 
 
 class Trainer:
 
-    def __init__(self, config):
+    def __init__(self, config: dict):
         self.config = config
         self.tokenizer = BertTokenizer.from_pretrained(config['vocab'])
         self.ontology = json.load(open(config['cleaned_ontology'], 'r', encoding='utf8'))
@@ -37,6 +38,11 @@ class Trainer:
         self.train_dataloader = self.load_data(data_path=self.config['train4bert_dst'], data_type='train')
         self.eval_dataloader = self.load_data(data_path=self.config['dev4bert_dst'], data_type='dev')
         self.test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='test')
+        # 增加不使用下采样模拟推理过程，比较评价指标
+        self.config['random_undersampling'] = 0
+        self.config['overall_undersampling_ratio'] = 0.02
+        self.no_undersampling_test_dataloader = self.load_data(data_path=self.config['test4bert_dst'],
+                                                               data_type='test')
         elapsed = time.time() - start_time
         print(f'Loading data cost {elapsed}s ...')
 
@@ -45,7 +51,8 @@ class Trainer:
         self.model_config = None
         self.optimizer = None
 
-    def set_model(self):
+    def set_model(self) -> None:
+        """init model, optimizer and training settings"""
         self.model_config = BertConfig.from_pretrained(self.config['config'])
         self.model = BertForSequenceClassification.from_pretrained(self.config['pytorch_model'],
                                                                    config=self.model_config)
@@ -56,26 +63,46 @@ class Trainer:
             self.model = nn.DataParallel(self.model)
 
     @staticmethod
-    def get_pos_neg_examples(example, pos_examples, neg_examples):
+    def get_pos_neg_examples(example: tuple, pos_examples: List[tuple],
+                             neg_examples: List[tuple]) -> None:
+        """According to label saving example.
+
+        Args:
+            example: a new generated example, (input_ids, token_type_ids, domain, slot, value ...)
+            pos_examples: all positive examples are saved in pos_examples
+            neg_examples: all negative examples are saved in pos_examples
+        """
         if example[-3] == 1:
             pos_examples.append(example)
         else:
             neg_examples.append(example)
 
-    def iter_dials(self, dials, data_type, pos_examples, neg_examples, process_id):
+    def iter_dials(self, dials: List[Tuple[str, dict]], data_type: str, pos_examples: List[tuple],
+                   neg_examples: List[tuple], process_id: int) -> None:
+        """Iterate on dialogues, turns in one dialogue to generate examples
+
+        Args:
+            dials: raw dialogues data
+            data_type: train, dev or test
+            pos_examples: all positive examples are saved in pos_examples
+            neg_examples: all negative examples are saved in pos_examples
+            process_id: current Process id
+        """
         for dial_id, dial in tqdm(dials, desc=f'Building {data_type} examples, current process-{process_id}'):
             sys_utter = '对话开始'
             for turn_id, turn in enumerate(dial['messages']):
                 if turn['role'] == 'sys':
                     sys_utter = turn['content']
                 else:
-                    belief_state = self.format_belief_state(turn)
+                    raw_belief_state = turn['belief_state']
+                    belief_state = self.format_belief_state(raw_belief_state)
 
                     usr_utter = turn['content']
                     context = sys_utter + self.tokenizer.sep_token + usr_utter
                     context_ids = self.tokenizer.encode(context, add_special_tokens=False)
 
-                    triple_labels = self.format_labels(turn)
+                    cur_dialog_act = turn['dialog_act']
+                    triple_labels = self.format_labels(cur_dialog_act)
 
                     cur_pos_examples, cur_neg_examples = self.ontology2examples(belief_state, context_ids, dial_id,
                                                                                 triple_labels, turn_id)
@@ -84,15 +111,46 @@ class Trainer:
                     neg_examples.extend(cur_neg_examples)
 
     @staticmethod
-    def format_belief_state(turn):
+    def format_belief_state(raw_belief_state: List[Dict[str, list]]) -> List[Tuple[str, str, str]]:
+        """Reformat raw belief state to the format that model need.
+
+        Args:
+            raw_belief_state: e.g.
+                                "belief_state": [
+                                                  {
+                                                    "slots": [
+                                                      [
+                                                        "餐馆-推荐菜",
+                                                        "驴 杂汤"
+                                                      ]
+                                                    ]
+                                                  }
+                                                ]
+
+        Returns:
+            belief_state, reformatted belief state
+        """
         belief_state = []
-        for bs in turn['belief_state']:
+        for bs in raw_belief_state:
             domain, slot = bs['slots'][0][0].split('-')
             value = ''.join(bs['slots'][0][1].split(' '))
             belief_state.append((domain, slot, value))
         return belief_state
 
-    def ontology2examples(self, belief_state, context_ids, dial_id, triple_labels, turn_id):
+    def ontology2examples(self, belief_state: List[Tuple[str, str, str]], context_ids: List[int],
+                          dial_id: str, triple_labels: Set[tuple], turn_id: int) -> Tuple[list, list]:
+        """Iterate item in ontology to build examples.
+
+        Args:
+            belief_state: return value of method `format_belief_state`
+            context_ids: context token's id in bert vocab
+            dial_id: dialogue id in raw dialogue data
+            triple_labels: triple label (domain, slot, value)
+            turn_id: turn id in one dialogue
+
+        Returns:
+            new generated examples based on ontology
+        """
         pos_examples = []
         neg_examples = []
 
@@ -104,31 +162,46 @@ class Trainer:
                 continue
 
             if domain not in ['greet', 'welcome', 'thank', 'bye'] and slot != '酒店设施':
-                example = turn2examples(self.tokenizer, domain, 'Request', slot, context_ids,
-                                        triple_labels, belief_state, dial_id, turn_id)
+                example = turn2example(self.tokenizer, domain, 'Request', slot, context_ids,
+                                       triple_labels, belief_state, dial_id, turn_id)
                 self.get_pos_neg_examples(example, pos_examples, neg_examples)
 
             for value in values:
                 value = ''.join(value.split(' '))
                 if slot == '酒店设施':
                     slot_value = slot + f'-{value}'
-                    example = turn2examples(self.tokenizer, domain, 'Request', slot_value, context_ids,
-                                            triple_labels, belief_state, dial_id, turn_id)
+                    example = turn2example(self.tokenizer, domain, 'Request', slot_value, context_ids,
+                                           triple_labels, belief_state, dial_id, turn_id)
                     self.get_pos_neg_examples(example, pos_examples, neg_examples)
 
-                example = turn2examples(self.tokenizer, domain, slot, value, context_ids,
-                                        triple_labels, belief_state, dial_id, turn_id)
+                example = turn2example(self.tokenizer, domain, slot, value, context_ids,
+                                       triple_labels, belief_state, dial_id, turn_id)
 
                 self.get_pos_neg_examples(example, pos_examples, neg_examples)
 
         if self.config['random_undersampling']:
-            neg_examples = random.sample(neg_examples, k=len(pos_examples))
+            neg_examples = random.sample(neg_examples, k=self.config['neg_pos_sampling_ratio'] * len(pos_examples))
 
         return pos_examples, neg_examples
 
     @staticmethod
-    def format_labels(turn):
-        turn_labels = turn['dialog_act']
+    def format_labels(dialog_act: List[List[str]]) -> Set[tuple]:
+        """Reformat raw dialog act to triple labels.
+
+        Args:
+            dialog_act: [
+                          [
+                            "Inform",
+                            "餐馆",
+                            "周边景点",
+                            "小汤山现代农业科技示范园"
+                          ],...
+                        ]
+
+        Returns:
+            triple_labels, reformatted labels, (domain, slot, value)
+        """
+        turn_labels = dialog_act
         triple_labels = set()
         for usr_da in turn_labels:
             intent, domain, slot, value = usr_da
@@ -140,7 +213,17 @@ class Trainer:
                 triple_labels.add((domain, slot, value))
         return triple_labels
 
-    def build_examples(self, data_path, data_cache_path, data_type):
+    def build_examples(self, data_path: str, data_cache_path: str, data_type: str) -> List[tuple]:
+        """Generate data_type dataset and cache them.
+
+        Args:
+            data_path: raw dialogue data path
+            data_cache_path: data save path
+            data_type: train, dev or test
+
+        Returns:
+            examples, mix up positive and negative examples
+        """
         dials = json.load(open(data_path, 'r', encoding='utf8'))
         dials = list(dials.items())
         if self.config['debug']:
@@ -162,7 +245,16 @@ class Trainer:
 
         return examples
 
-    def async_build_examples(self, data_type, dials):
+    def async_build_examples(self, data_type: str, dials: List[Tuple[str, dict]]) -> Tuple[list, list]:
+        """Use multiprocessing to process raw dialogue data.
+
+        Args:
+            data_type: train, dev or test
+            dials: raw dialogues data
+
+        Returns:
+            new examples by all processes
+        """
         neg_examples = Manager().list()
         pos_examples = Manager().list()
         dials4single_process = (len(dials) - 1) // self.config['num_processes'] + 1
@@ -179,7 +271,17 @@ class Trainer:
         neg_examples = list(neg_examples)
         return neg_examples, pos_examples
 
-    def load_data(self, data_path, data_type):
+    def load_data(self, data_path: str, data_type: str) -> DataLoader:
+        """Loading data by loading cache data or generating examples from scratch.
+
+        Args:
+            data_path: raw dialogue data
+            data_type: train, dev or test
+
+        Returns:
+            dataloader, see torch.utils.data.DataLoader,
+            https://pytorch.org/docs/stable/data.html?highlight=torch%20utils%20data%20dataloader#torch.utils.data.DataLoader
+        """
         print(f'Starting preprocess {data_type} data ...')
         raw_data_name = os.path.basename(data_path)
         processed_data_name = 'processed_' + raw_data_name.split('.')[0] + '.pt'
@@ -190,6 +292,7 @@ class Trainer:
             print(f'Total {len(examples[0])} {data_type} examples ...')
         else:
             examples = self.build_examples(data_path, data_cache_path, data_type)
+
         dataset = DSTDataset(examples)
         shuffle = True if data_type == 'train' else False
         batch_size = self.config[f'{data_type}_batch_size']
@@ -198,7 +301,19 @@ class Trainer:
                                 num_workers=self.config['num_workers'], collate_fn=collate)
         return dataloader
 
-    def evaluation(self, dataloader, epoch=None, mode='dev'):
+    def evaluation(self, dataloader: DataLoader, epoch: Optional[int] = None, mode: str = 'dev') -> float:
+        """Evaluation on dev dataset or test dataset.
+
+        calculate `turn_inform` accuracy, `turn_request` accuracy and `joint_goal` accuracy
+
+        Args:
+            dataloader: see torch.utils.data.DataLoader
+            epoch: current training epochs
+            mode: train, dev or test
+
+        Returns:
+            specified metric value
+        """
         self.model.eval()
         eval_bar = tqdm(enumerate(dataloader), total=len(dataloader),
                         desc='Evaluating' if mode == 'dev' else 'Testing')
@@ -226,7 +341,16 @@ class Trainer:
         return metrics_res[self.config['eval_metric']]
 
     @staticmethod
-    def format_results(batch, labels, preds, results):
+    def format_results(batch: Dict[str, torch.Tensor], labels: List[int],
+                       preds: List[int], results: Dict[str, dict]) -> None:
+        """Reformat evaluation results to facilitate the calculation of metrics.
+
+        Args:
+            batch: batch data
+            labels: ground truth
+            preds: model output
+            results: save labels and pred based on dialogue id, turn id
+        """
         for i, (pred, label, belief_state, dialogue_idx, turn_id) in enumerate(
                 zip(preds, labels, batch['belief_states'],
                     batch['dialogue_idxs'], batch['turn_ids'])):
@@ -241,7 +365,8 @@ class Trainer:
             if label == 1:
                 results[dialogue_idx][turn_id]['labels'].append(triple)
 
-    def eval_test(self):
+    def eval_test(self) -> None:
+        """Loading best model to evaluate test dataset."""
         if self.best_model_path is not None:
             if hasattr(self.model, 'module'):
                 self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
@@ -249,8 +374,10 @@ class Trainer:
                 self.model = BertForSequenceClassification.from_pretrained(self.best_model_path)
             self.model.to(self.config['device'])
         self.evaluation(self.test_dataloader, mode='test')
+        self.evaluation(self.no_undersampling_test_dataloader, mode='test')
 
-    def train(self):
+    def train(self) -> None:
+        """Training."""
         self.set_model()
         epoch_bar = trange(0, self.config['num_epochs'], desc='Epoch')
         best_metric = 0
@@ -278,7 +405,13 @@ class Trainer:
                 best_metric = eval_metric
                 self.save(epoch, best_metric)
 
-    def save(self, epoch, best_metric):
+    def save(self, epoch: int, best_metric: str) -> None:
+        """Save the best model according to specified metric.
+
+        Args:
+            epoch: current training epoch
+            best_metric: specified metric
+        """
         save_name = f'Epoch-{epoch}-{self.config["eval_metric"]}-{best_metric:.3f}'
         self.best_model_path = os.path.join(self.config['output_dir'], save_name)
         if not os.path.exists(self.best_model_path):
@@ -333,7 +466,25 @@ def main():
     trainer = Trainer(train_config)
     trainer.train()
     trainer.eval_test()
+    # {   "turn_inform": 0.03,   "turn_request": 0.11,   "joint_goal": 0.0 }
 
 
 if __name__ == '__main__':
     main()
+    # with open('bad_cases.json', 'r', encoding='utf8') as f:
+    #     bad_cases = json.load(f)
+    #
+    # tp = 0
+    # total = 0
+    # for dial_id, dial in bad_cases.items():
+    #     for turn_id, turn in dial.items():
+    #         pred_inform = [tuple(item) for item in turn['pred_inform']]
+    #         pred_request = [tuple(item) for item in turn['pred_request']]
+    #         gold_inform = [tuple(item) for item in turn['gold_inform']]
+    #         gold_request = [tuple(item) for item in turn['gold_request']]
+    #         tp += len(set(pred_inform) & set(gold_inform))
+    #         tp += len(set(pred_request) & set(gold_request))
+    #         total += len(gold_inform)
+    #         total += len(gold_request)
+    #
+    # print(f'recall: {tp / total}')

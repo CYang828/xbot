@@ -5,6 +5,7 @@ import random
 from copy import deepcopy
 from functools import partial
 from collections import defaultdict
+from typing import List, Tuple, Set, Dict, Optional
 
 from tqdm import tqdm, trange
 
@@ -20,13 +21,13 @@ from xbot.util.path import get_data_path
 from xbot.util.train_util import update_config
 from xbot.util.download import download_from_url
 from xbot.util.file_util import load_json, dump_json
-from script.policy.bert.utils import preprocess, ACT_ONTOLOGY, eval_metrics, NUM_ACT, get_joint_acc
 from data.crosswoz.data_process.policy.bert_proprecess import PolicyDataset, collate_fn, str2id
+from script.policy.bert.utils import preprocess, ACT_ONTOLOGY, eval_metrics, NUM_ACT, get_joint_acc
 
 
 class Trainer:
 
-    def __init__(self, config):
+    def __init__(self, config: dict):
         self.config = config
         model_config = BertConfig.from_pretrained(config['config'])
         model_config.num_labels = NUM_ACT
@@ -51,7 +52,15 @@ class Trainer:
         self.threshold = config['threshold']
         self.best_model_path = None
 
-    def load_data(self, data_type):
+    def load_data(self, data_type: str) -> DataLoader:
+        """Load data from data cache or build from scratch.
+
+        Args:
+            data_type: train, dev or test
+
+        Returns:
+            DataLoader, see torch.utils.data.DataLoader
+        """
         raw_data_path = os.path.join(self.config['raw_data_path'], f'{data_type}.json.zip')
         filename = f'{data_type}.json'
         output_path = os.path.join(self.config['data_path'], filename)
@@ -74,7 +83,17 @@ class Trainer:
                                 shuffle=shuffle, pin_memory=True, collate_fn=collate)
         return dataloader
 
-    def get_input_ids(self, examples):
+    def get_input_ids(self, examples: List[dict]) -> Dict[str, List[list]]:
+        """Convert utterance string to id based on BertTokenizer.
+
+        Args:
+            examples: a list of example, one example contain dialogue id, turn id, input id,
+                      token type id, ground truth label
+
+        Returns:
+            examples dict, same type data are placed in a same list. e.g. dialogue id of all examples
+            are placed into examples_dict['dial_ids']
+        """
         examples_dict = defaultdict(list)
 
         for example in examples:
@@ -89,7 +108,15 @@ class Trainer:
 
         return examples_dict
 
-    def eval_forward(self, batch):
+    def eval_forward(self, batch: dict) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Evaluation forward step, calculate loss and probability of classes
+
+        Args:
+            batch: batch data, see output of collate_fn
+
+        Returns:
+            ground truth labels, forward loss, model prediction
+        """
         inputs = {k: v.to(self.config['device']) for k, v in list(batch.items())[:4]}
         labels = inputs.pop('labels')
         logits = self.model(**inputs)[0]
@@ -101,7 +128,18 @@ class Trainer:
         return labels, loss, preds
 
     @staticmethod
-    def format_results(batch, labels, preds, results):
+    def format_results(batch: dict, labels: torch.Tensor, preds: torch.Tensor, results: dict) -> None:
+        """
+
+        Args:
+            batch:
+            labels:
+            preds:
+            results:
+
+        Returns:
+
+        """
         for dial_id, turn_id, pred, label in zip(batch['dial_ids'], batch['turn_ids'],
                                                  preds, labels):
             if turn_id not in results[dial_id]:
