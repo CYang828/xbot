@@ -9,6 +9,7 @@ import numpy as np
 
 from xbot.util.path import get_data_path
 from xbot.util.file_util import read_zipped_json
+from data.crosswoz.data_process.dst.bert_preprocess import rank_values
 
 
 def get_inf_req(triple_list: List[tuple]) -> Tuple[Set[tuple], Set[tuple]]:
@@ -31,10 +32,11 @@ def get_inf_req(triple_list: List[tuple]) -> Tuple[Set[tuple], Set[tuple]]:
     return request, inform
 
 
-def eval_metrics(model_output: Dict[str, dict]) -> Dict[str, float]:
+def eval_metrics(model_output: Dict[str, dict], data_path: str) -> Dict[str, float]:
     """Calculate `turn_inform` accuracy, `turn_request` accuracy and `joint_goal` accuracy
 
     Args:
+        data_path: save path of bad cases
         model_output: reformatted results containing preds and ground truth
                       according to dialogue id and turn id
 
@@ -49,8 +51,11 @@ def eval_metrics(model_output: Dict[str, dict]) -> Dict[str, float]:
     for dialogue_idx, dia in model_output.items():
         turn_dict = defaultdict(dict)
         for turn_id, turn in dia.items():
+            logits = turn['logits']
             preds = turn['preds']
             labels = turn['labels']
+
+            preds = rank_values(logits, preds)
 
             gold_request, gold_inform = get_inf_req(labels)
             pred_request, pred_inform = get_inf_req(preds)
@@ -69,11 +74,29 @@ def eval_metrics(model_output: Dict[str, dict]) -> Dict[str, float]:
 
         inform_request_dict.update({dialogue_idx: turn_dict})
 
-    with open('bad_cases.json', 'w', encoding='utf8') as f:
+    with open(os.path.join(data_path, 'bad_cases.json'), 'w', encoding='utf8') as f:
         json.dump(inform_request_dict, f, indent=2, ensure_ascii=False)
 
     return {'turn_inform': round(float(np.mean(inform)), 3), 'turn_request': round(float(np.mean(request)), 3),
             'joint_goal': round(float(np.mean(joint_goal)), 3)}
+
+
+def get_recall(data_path):
+    with open(os.path.join(data_path, 'bad_cases.json'), 'r', encoding='utf8') as f:
+        bad_cases = json.load(f)
+    tp = 0
+    total = 0
+    for dial_id, dial in bad_cases.items():
+        for turn_id, turn in dial.items():
+            pred_inform = [tuple(item) for item in turn['pred_inform']]
+            pred_request = [tuple(item) for item in turn['pred_request']]
+            gold_inform = [tuple(item) for item in turn['gold_inform']]
+            gold_request = [tuple(item) for item in turn['gold_request']]
+            tp += len(set(pred_inform) & set(gold_inform))
+            tp += len(set(pred_request) & set(gold_request))
+            total += len(gold_inform)
+            total += len(gold_request)
+    print(f'recall: {tp / total}')
 
 
 def merge_raw_date(data_type: str) -> None:
