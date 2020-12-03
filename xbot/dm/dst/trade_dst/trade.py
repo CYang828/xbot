@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import pickle
 
@@ -11,10 +10,12 @@ import torch.nn as nn
 from xbot.util.dst_util import DST
 from xbot.util.state import default_state
 from xbot.util.download import download_from_url
-from xbot.util.path import get_data_path, get_config_path, get_root_path
+from xbot.util.path import get_data_path, get_config_path
 from data.crosswoz.data_process.dst.trade_preprocess import get_slot_information, prepare_data_for_update
 
-sys.path.append(os.path.join(get_root_path(), 'script/dst/trade'))
+import sys
+
+sys.path.append('/xhp/xbot/script/dst/trade')
 
 
 class EncoderRNN(nn.Module):
@@ -286,9 +287,9 @@ class TradeDST(DST):
     common_config_name = 'dst/trade/common.json'
 
     model_urls = {
-        'trade-Epoch-9-JACC-0.5060.pth': 'http://qiw2jpwfc.hn-bkt.clouddn.com/trade-Epoch-9-JACC-0.5060.pth',
-        'lang-train.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/lang-train.pkl',
-        'mem-lang-train.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/mem-lang-train.pkl',
+        'trade-Epoch-9-JACC-0.5140.pth': 'http://qiw2jpwfc.hn-bkt.clouddn.com/trade-Epoch-9-JACC-0.5140.pth',
+        'lang-all.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/lang-all.pkl',
+        'mem-lang-all.pkl': 'http://qiw2jpwfc.hn-bkt.clouddn.com/mem-lang-all.pkl',
         'ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/ontology.json'
     }
 
@@ -304,8 +305,6 @@ class TradeDST(DST):
         self.model_config['data_path'] = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
         self.model_config['n_gpus'] = 0 if self.model_config['device'] == 'cpu' else torch.cuda.device_count()
         self.model_config['device'] = torch.device(self.model_config['device'])
-        if model_config['load_embedding']:
-            model_config['hidden_size'] = 300
 
         # download data
         for model_key, url in TradeDST.model_urls.items():
@@ -336,7 +335,7 @@ class TradeDST(DST):
                       pad_id=self.model_config['pad_id'], slots=self.all_slots,
                       num_gates=len(self.gate2id), unk_mask=self.model_config['unk_mask'])
 
-        model.load_state_dict(torch.load(self.model_config['trained_model_path']))
+        # model.load_state_dict(torch.load(self.model_config['trained_model_path'], map_location='cpu'))
 
         self.model = model.to(self.model_config['device']).eval()
         print(f'>>> {self.model_config["trained_model_path"]} loaded ...')
@@ -348,7 +347,10 @@ class TradeDST(DST):
 
     def update_belief_state(self, predict_belief):
         for domain_slot, value in predict_belief:
-            domain, slot = domain_slot.split('-')
+            try:
+                domain, slot = domain_slot.split('-')
+            except ValueError:
+                print(domain_slot)
             if domain in self.state['belief_state']:
                 self.state['belief_state'][domain][slot] = value
 
@@ -387,13 +389,8 @@ class TradeDST(DST):
 
 if __name__ == '__main__':
     import random
-
     dst_model = TradeDST()
     data_path = os.path.join(get_data_path(), 'crosswoz/dst_trade_data')
-    dials_path = os.path.join(data_path, 'dev_dials.json')
-    # download dials file
-    if not os.path.exists(dials_path):
-        download_from_url('http://qiw2jpwfc.hn-bkt.clouddn.com/dev_dials.json', dials_path)
     with open(os.path.join(data_path, 'dev_dials.json'), 'r', encoding='utf8') as f:
         dials = json.load(f)
         example = random.choice(dials)

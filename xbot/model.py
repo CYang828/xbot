@@ -1,6 +1,6 @@
 from abc import ABC
 
-from xbot.gl import DEFAULT_MODEL_DST
+from xbot.constants import DEFAULT_MODEL_PATH
 from xbot.util.download import download_from_url
 
 import pytorch_lightning as pl
@@ -13,4 +13,5 @@ class Model(pl.LightningDataModule, ABC):
 
     @staticmethod
     def load_from_net(url):
-        download_from_url(url, DEFAULT_MODEL_DST)
+        download_from_url(url, DEFAULT_MODEL_PATH)
+

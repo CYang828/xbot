@@ -1,4 +1,4 @@
-from xbot.exception import XBotException
+from xbot.exceptions import XBotException
 
 
 class ChatbotException(XBotException):
