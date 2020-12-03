@@ -2,7 +2,7 @@ import os
 import json
 from typing import Any
 
-from xbot.gl import DEFAULT_MODEL_PATH
+from xbot.constants import DEFAULT_MODEL_PATH
 from xbot.util.nlu_util import NLU
 from xbot.util.path import get_root_path
 from xbot.util.download import download_from_url
@@ -125,13 +125,13 @@ class JointWithBert(nn.Module):
 class JointWithBertPredictor(NLU):
     """NLU Joint with Bert 预测器"""
 
-    default_model_config = 'crosswoz_all_context_joint_nlu.json'
+    default_model_config = 'nlu/crosswoz_all_context_joint_nlu.json'
     default_model_name = 'pytorch-joint-with-bert.pt'
     default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-joint-with-bert.pt'
 
     def __init__(self):
         root_path = get_root_path()
-        config_file = os.path.join(root_path, 'xbot/configs/{}'.format(JointWithBertPredictor.default_model_config))
+        config_file = os.path.join(root_path, 'xbot/config/{}'.format(JointWithBertPredictor.default_model_config))
         config = json.load(open(config_file))
         device = config['DEVICE']
         data_dir = os.path.join(root_path, config['data_dir'])

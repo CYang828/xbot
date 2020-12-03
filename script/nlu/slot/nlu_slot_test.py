@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/10/28 2:18 下午
 # @Author  : zhengjiawei
-# @FileName: slot_test.py
+# @FileName: nlu_slot_test.py
 # @Software: PyCharm
 
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     # load config
     root_path = get_root_path()
-    config_path = os.path.join(root_path, 'xbot/configs/crosswoz_all_context_nlu_slot.json')
+    config_path = os.path.join(root_path, 'xbot/config/crosswoz_all_context_nlu_slot.json')
     config = json.load(open(config_path))
     data_path = config['data_dir']
     data_path = os.path.join(root_path, data_path)

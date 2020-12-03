@@ -33,6 +33,7 @@ class RuleDST(DST):
         inform_domains = Counter([x[1] for x in usr_da if x[0] == 'Inform'])
         sys_domains = Counter([x[1] for x in sys_da if x[0] in ['Inform', 'Recommend']])
 
+        # 确定domain
         # 为什么首选 select_domain
         # 观察数据集可以发现，Select 意图出现的时候是主导整句话的，即便出现了
         # Inform 和 Request 也是为了为 Select 提供辅助信息，Inform 排在 Request 之后，也是这个道理
@@ -52,8 +53,8 @@ class RuleDST(DST):
         # 所以只有当 system 基于当前约束完全无法给出建议的时候，当前 domain 的约束才算失效
         no_offer = 'NoOffer' in [x[0] for x in sys_da] and 'Inform' not in [x[0] for x in sys_da]
         # DONE: clean cur domain constraints because no offer
-
         if no_offer:
+            # ISSUE: 过于暴力的做法
             if self.state['cur_domain']:  # 没有 offer 则清空对应 domain 的 state，即 slot 对应的 value
                 self.state['belief_state'][self.state['cur_domain']] = deepcopy(
                     default_state()['belief_state'][self.state['cur_domain']])
@@ -61,10 +62,12 @@ class RuleDST(DST):
         # DONE: clean request slot
         # 上一个 system action 中的 inform 和 recommend 表示已经完成的 request，所以从 request_slots 移除
         for domain, slot in deepcopy(self.state['request_slots']):
+            # 已解决的slot全部清除过于暴力
             if [domain, slot] in [x[1:3] for x in sys_da if x[0] in ['Inform', 'Recommend']]:
                 self.state['request_slots'].remove([domain, slot])
 
         # DONE: domain switch
+        # 非常强依赖前面的NLU
         for intent, domain, slot, value in usr_da:
             # ["Select", "酒店", "源领域", "餐馆"] 找餐馆附近的酒店，所以餐馆是 from_domain
             if intent == 'Select':
@@ -97,12 +100,23 @@ class RuleDST(DST):
             elif intent == 'Request':  # 存入新增的 domain-slot
                 self.state['request_slots'].append([domain, slot])
 
+        # ISSUE： 词槽澄清
+        # ISSUE： Repeat Intent
+        # ISSUE： System State
+        # ISSUE： Hidden Slot
+        # ISSUE： 平级槽和依赖槽
+
         return self.state
 
 
 if __name__ == '__main__':
     dst = RuleDST()
     dst.init_session()
-    pprint(dst.state)
+    # ISSUE： Memory问题
+    # input: intent + slot
+
     dst.update([['Inform', '酒店', '评分', '4分以上'], ['Request', '酒店', '地址', '']])
+    dst.update([['Inform', '酒店', '名称', '颐和园大酒店'], ['Request', '酒店', '地址', '颐和园']])
+
+    # output: state dict
     pprint(dst.state)

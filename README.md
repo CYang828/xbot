@@ -1,19 +1,32 @@
 # XBot
 This is a chatbot for X.
 
+<img align="right" height="244" src="asset/xbot.jpg">
+
+
 ## Quick Start
 ```
 git clone https://github.com/BSlience/xbot.git
 ```
 
 ### NLU
-```
-# intent classification
-cd xbot/ && python xbot/nlu/intent/intent_with_bert.py
-# slot extraction
+```bash
+cd xbot
+
+# intent classification predict
+python xbot/nlu/intent/intent_with_bert.py
+# intent classification train
+python script/nlu/intent/nlu_intent_train.py
+
+# slot extraction predict
 cd xbot/ && python xbot/slot/slot_with_bert.py
-# nlu-joint
+# slot extraction train
+python script/nlu/slot/nlu_slot_train.py
+
+# nlu-joint predict
 cd xbot/ && python xbot/joint/joint_with_bert.py
+# nlu-joint train
+python script/nlu/joint/nlu_joint_train.py
 ```
 
 ### DST

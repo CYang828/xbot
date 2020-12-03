@@ -30,5 +30,3 @@ def download_from_url(url, dst):
                 pbar.update(1024)
     pbar.close()
     return file_size
-
-
