@@ -134,6 +134,7 @@ dmypy.json
 .idea/*
 *.log
 data/crosswoz/*_data/
+data/crosswoz/raw/
 log/*
 output/*
 build/
