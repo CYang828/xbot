@@ -78,7 +78,7 @@ class Database:
         :param cur_domain: maintain by DST, current query domain
         :return: list of entities
         """
-        if not cur_domain:  # 没有 domain 可能就是类似于 General+greet+none，无需查询
+        if not cur_domain:  # 没有 domain 就是类似于 General+greet+none，无需查询
             return []
         cur_query_form = {}
         # 当前 belief state 的当前 domain

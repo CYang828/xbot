@@ -1,2 +1,2 @@
-DEFAULT_MODEL_PATH = 'output/all_context/'
+DEFAULT_MODEL_PATH = '/tmp'
 

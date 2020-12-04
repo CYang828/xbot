@@ -101,5 +101,7 @@ class RulePolicy(Policy):
                     sys_da.append(['General', 'bye', 'none', 'none'])
                 if domain == 'thank' and state['terminated']:
                     sys_da.append(['General', 'welcome', 'none', 'none'])
-
         return sys_da
+
+
+
