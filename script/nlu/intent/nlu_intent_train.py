@@ -84,7 +84,7 @@ if __name__ == '__main__':
                                                     num_training_steps=config['model']['max_step'])
     else:
         for n, p in model.named_parameters():
-            if 'bert' in n:
+            if 'bert_policy' in n:
                 p.requires_grad = False
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=config['model']['learning_rate'])
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
             if F1 > best_val_f1:
                 best_val_f1 = F1
-                torch.save(model.state_dict(), os.path.join(output_dir, 'pytorch-intent-with-bert.pt'))
+                torch.save(model.state_dict(), os.path.join(output_dir, 'pytorch-intent-with-bert_policy.pt'))
                 print('best val F1 %.4f' % best_val_f1)
                 print('save on', output_dir)
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     writer.add_text('val intent F1', '%.2f' % (100 * best_val_f1))
     writer.close()
 
-    model_path = os.path.join(output_dir, 'pytorch-intent-with-bert.pt')##存放模型
+    model_path = os.path.join(output_dir, 'pytorch-intent-with-bert_policy.pt')##存放模型
     zip_path = config['zipped_model_path']
     zip_path = os.path.join(root_path, zip_path)
     print('zip model to', zip_path)

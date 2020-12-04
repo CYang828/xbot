@@ -11,7 +11,7 @@ class Dataloader:
         """
         :param intent_vocab: list of all intents
         :param tag_vocab: list of all tags
-        :param pretrained_weights: which bert, e.g. 'bert-base-uncased'
+        :param pretrained_weights: which bert_policy, e.g. 'bert_policy-base-uncased'
         """
         self.intent_vocab = intent_vocab
         self.tag_vocab = tag_vocab
@@ -72,9 +72,9 @@ class Dataloader:
                 neg_pos = (train_size - self.intent_weight[intent_id]) / self.intent_weight[intent_id]
                 self.intent_weight[intent_id] = np.log10(neg_pos)
             self.intent_weight = torch.tensor(self.intent_weight)
-        print('max sen bert len', max_sen_len)
+        print('max sen bert_policy len', max_sen_len)
         print(sorted(Counter(sen_len).items()))
-        print('max context bert len', max_context_len)
+        print('max context bert_policy len', max_context_len)
         print(sorted(Counter(context_len).items()))
 
     def bert_tokenize(self, word_seq, tag_seq):

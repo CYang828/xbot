@@ -28,7 +28,7 @@ def preprocess():
     processed_data = {}  ##存储训练集验证集和测试集处理好的数据
     all_intent = []
 
-    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
+    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert_policy-wwm-ext")
 
     for key in data_key:
         processed_data[key] = []
