@@ -149,17 +149,19 @@ def get_bert_input(examples: List[tuple]) -> Tuple[torch.Tensor, torch.Tensor, t
     return attention_mask, input_ids_tensor, token_type_ids_tensor
 
 
-def rank_values(logits: List[float], preds: List[tuple]) -> List[tuple]:
+def rank_values(logits: List[float], preds: List[tuple], top_k: int) -> List[tuple]:
     """Rank domain-slot pair corresponding values.
 
     Args:
         logits: prediction corresponding logits
         preds: a list of triple labels
+        top_k: take top k prediction labels
 
     Returns:
         top-1 predicted triple label
     """
-    preds_logits_pair = sorted(zip(preds, logits), key=lambda x: x[1], reverse=True)[:5]
+    top_k = min(len(preds), top_k)
+    preds_logits_pair = sorted(zip(preds, logits), key=lambda x: x[1], reverse=True)[:top_k]
     ranking_dict = defaultdict(list)
     for pred, logit in preds_logits_pair:
         key = '-'.join(pred[:2])

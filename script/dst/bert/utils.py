@@ -32,13 +32,14 @@ def get_inf_req(triple_list: List[tuple]) -> Tuple[Set[tuple], Set[tuple]]:
     return request, inform
 
 
-def eval_metrics(model_output: Dict[str, dict], data_path: str) -> Dict[str, float]:
+def eval_metrics(model_output: Dict[str, dict], data_path: str, top_k: int) -> Dict[str, float]:
     """Calculate `turn_inform` accuracy, `turn_request` accuracy and `joint_goal` accuracy
 
     Args:
         data_path: save path of bad cases
         model_output: reformatted results containing preds and ground truth
                       according to dialogue id and turn id
+        top_k: take top k prediction labels
 
     Returns:
         metrics
@@ -55,7 +56,7 @@ def eval_metrics(model_output: Dict[str, dict], data_path: str) -> Dict[str, flo
             preds = turn['preds']
             labels = turn['labels']
 
-            preds = rank_values(logits, preds)
+            preds = rank_values(logits, preds, top_k)
 
             gold_request, gold_inform = get_inf_req(labels)
             pred_request, pred_inform = get_inf_req(preds)

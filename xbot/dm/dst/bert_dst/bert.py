@@ -22,10 +22,10 @@ class BertDST(DST):
     common_config_name = 'dst/bert/common.json'
 
     data_urls = {
-        'cleaned_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/cleaned_ontology.json',
-        'config.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/bert-dst/config.json',
-        'pytorch_model.bin': 'http://qiw2jpwfc.hn-bkt.clouddn.com/bert-dst/pytorch_model.bin',
-        'vocab.txt': 'http://qiw2jpwfc.hn-bkt.clouddn.com/bert-dst/vocab.txt'
+        'cleaned_ontology.json': 'http://xbot.bslience.cn/cleaned_ontology.json',
+        'config.json': 'http://xbot.bslience.cn/bert-dst/config.json',
+        'pytorch_model.bin': 'http://xbot.bslience.cn/bert-dst/pytorch_model.bin',
+        'vocab.txt': 'http://xbot.bslience.cn/bert-dst/vocab.txt'
     }
 
     def __init__(self):
@@ -36,7 +36,6 @@ class BertDST(DST):
         # download data
         self.download_data(infer_config)
 
-        infer_config['model_dir'] = '/xhp/xbot/output/dst/bert/Epoch-0-turn_inform-0.988'
         self.ontology = json.load(open(infer_config['cleaned_ontology'], 'r', encoding='utf8'))
         self.model = BertForSequenceClassification.from_pretrained(infer_config['model_dir'])
         self.model.to(infer_config['device'])
@@ -207,7 +206,7 @@ class BertDST(DST):
         pred_labels = []
         true_logits = []
         dataloader = self.preprocess(sys_uttr, usr_utter)
-        pbar = tqdm(enumerate(dataloader), desc='Inferring')
+        pbar = tqdm(enumerate(dataloader), total=len(dataloader), desc='Inferring')
 
         with torch.no_grad():
             for step, batch in pbar:
@@ -222,7 +221,7 @@ class BertDST(DST):
                         true_logits.append(logit)
                         pred_labels.append(triple)
 
-        pred_labels = rank_values(true_logits, pred_labels)
+        pred_labels = rank_values(true_logits, pred_labels, self.config['top_k'])
 
         return pred_labels
 
@@ -239,13 +238,11 @@ if __name__ == '__main__':
         for ti, turn in enumerate(example['dialogue']):
             dst_model.state['history'].append(('sys', turn['system_transcript']))
             dst_model.state['history'].append(('usr', turn['transcript']))
+            dst_model.update([])
             if random.random() < 0.5:
                 break_turn = ti + 1
                 break
     if break_turn == len(example['dialogue']):
         print('对话已完成，请重新开始测试')
-    print('对话状态更新前：')
-    print(json.dumps(dst_model.state, indent=2, ensure_ascii=False))
-    dst_model.update([])
     print('对话状态更新后：')
     print(json.dumps(dst_model.state, indent=2, ensure_ascii=False))

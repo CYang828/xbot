@@ -40,7 +40,7 @@ class Trainer:
         self.test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='test')
         # 增加不使用下采样模拟推理过程，比较评价指标
         self.config['random_undersampling'] = 0
-        self.config['overall_undersampling_ratio'] = 0.02
+        self.config['overall_undersampling_ratio'] = 0.02  # 为了减少评估时间，可以根据自己的机器能力设定
         self.no_undersampling_test_dataloader = self.load_data(data_path=self.config['test4bert_dst'],
                                                                data_type='test')
         elapsed = time.time() - start_time
@@ -337,7 +337,7 @@ class Trainer:
                 desc += f'CELoss: {loss.item():.3f}'
                 eval_bar.set_description(desc)
 
-        metrics_res = eval_metrics(results, self.config['data_path'])
+        metrics_res = eval_metrics(results, self.config['data_path'], self.config['top_k'])
         print('*' * 10 + ' eval metrics ' + '*' * 10)
         print(json.dumps(metrics_res, indent=2))
         return metrics_res[self.config['eval_metric']]
@@ -431,13 +431,13 @@ def main():
     common_config_name = 'dst/bert/common.json'
 
     data_urls = {
-        'train4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train4bert_dst.json',
-        'dev4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/dev4bert_dst.json',
-        'test4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test4bert_dst.json',
-        'cleaned_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/cleaned_ontology.json',
-        'config.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/config.json',
-        'pytorch_model.bin': 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_model.bin',
-        'vocab.txt': 'http://qiw2jpwfc.hn-bkt.clouddn.com/vocab.txt'
+        'train4bert_dst.json': 'http://xbot.bslience.cn/train4bert_dst.json',
+        'dev4bert_dst.json': 'http://xbot.bslience.cn/dev4bert_dst.json',
+        'test4bert_dst.json': 'http://xbot.bslience.cn/test4bert_dst.json',
+        'cleaned_ontology.json': 'http://xbot.bslience.cn/cleaned_ontology.json',
+        'config.json': 'http://xbot.bslience.cn/bert-base-chinese/config.json',
+        'pytorch_model.bin': 'http://xbot.bslience.cn/bert-base-chinese/pytorch_model.bin',
+        'vocab.txt': 'http://xbot.bslience.cn/bert-base-chinese/vocab.txt'
     }
 
     # load config
@@ -471,11 +471,6 @@ def main():
     trainer.train()
     trainer.eval_test()
     get_recall(train_config['data_path'])
-    # 1： 3 {"turn_inform": 0.03, "turn_request": 0.11, "joint_goal": 0.0}
-    # 1： 5 {"turn_inform": 0.062, "turn_request": 0.138, "joint_goal": 0.0}
-    # 1： 5 top-10 {"turn_inform": 0.1, "turn_request": 0.263, "joint_goal": 0.0}
-    # 1： 5 top-6 {"turn_inform": 0.237, "turn_request": 0.362, "joint_goal": 0.025}
-    # 1： 5 top-5 {"turn_inform": 0.275, "turn_request": 0.362, "joint_goal": 0.025}
 
 
 if __name__ == '__main__':
