@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Tuple, Set, Optional
 
 import torch
@@ -119,7 +120,7 @@ def collate_fn(examples: List[tuple], mode: str = 'train') -> dict:
     return data
 
 
-def get_bert_input(examples: List[tuple]) -> 3 * Tuple[torch.Tensor]:
+def get_bert_input(examples: List[tuple]) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Convert input list to torch tensor.
 
     Args:
@@ -146,3 +147,28 @@ def get_bert_input(examples: List[tuple]) -> 3 * Tuple[torch.Tensor]:
             token_type_ids_tensor[i] = torch.tensor(token_type_ids[i][:max_seq_len], dtype=torch.long)
 
     return attention_mask, input_ids_tensor, token_type_ids_tensor
+
+
+def rank_values(logits: List[float], preds: List[tuple], top_k: int) -> List[tuple]:
+    """Rank domain-slot pair corresponding values.
+
+    Args:
+        logits: prediction corresponding logits
+        preds: a list of triple labels
+        top_k: take top k prediction labels
+
+    Returns:
+        top-1 predicted triple label
+    """
+    top_k = min(len(preds), top_k)
+    preds_logits_pair = sorted(zip(preds, logits), key=lambda x: x[1], reverse=True)[:top_k]
+    ranking_dict = defaultdict(list)
+    for pred, logit in preds_logits_pair:
+        key = '-'.join(pred[:2])
+        ranking_dict[key].append((pred[-1], logit))
+    preds = []
+    for ds, pred_score in ranking_dict.items():
+        domain, slot = ds.split('-')
+        value = sorted(pred_score, key=lambda x: x[-1], reverse=True)[0][0]
+        preds.append((domain, slot, value))
+    return preds

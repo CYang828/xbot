@@ -1,3 +1,4 @@
 {
-  "output_dir": "output/dst/bert"
+  "output_dir": "output/dst/bert",
+  "top_k": 5
 }

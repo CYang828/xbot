@@ -20,7 +20,7 @@ from torch.multiprocessing import Manager, Pool
 from transformers import BertTokenizer, BertConfig
 from transformers import BertForSequenceClassification
 
-from script.dst.bert.utils import eval_metrics
+from script.dst.bert.utils import eval_metrics, get_recall
 from xbot.util.download import download_from_url
 from xbot.util.path import get_data_path, get_root_path, get_config_path
 from data.crosswoz.data_process.dst.bert_preprocess import turn2example, DSTDataset, collate_fn
@@ -40,7 +40,7 @@ class Trainer:
         self.test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='test')
         # 增加不使用下采样模拟推理过程，比较评价指标
         self.config['random_undersampling'] = 0
-        self.config['overall_undersampling_ratio'] = 0.02
+        self.config['overall_undersampling_ratio'] = 0.02  # 为了减少评估时间，可以根据自己的机器能力设定
         self.no_undersampling_test_dataloader = self.load_data(data_path=self.config['test4bert_dst'],
                                                                data_type='test')
         elapsed = time.time() - start_time
@@ -326,42 +326,46 @@ class Trainer:
                 if self.config['n_gpus'] > 1:
                     loss = loss.mean()
 
-                preds = logits.argmax(dim=-1).cpu().tolist()
+                # preds = logits.argmax(dim=-1).cpu().tolist()
+                max_logits, preds = [item.cpu().tolist() for item in logits.max(dim=1)]
+
                 labels = inputs['labels'].cpu().tolist()
 
-                self.format_results(batch, labels, preds, results)
+                self.format_results(batch, labels, preds, max_logits, results)
 
                 desc = f'Evaluating： Epoch: {epoch}, ' if mode == 'dev' else 'Best model, '
                 desc += f'CELoss: {loss.item():.3f}'
                 eval_bar.set_description(desc)
 
-        metrics_res = eval_metrics(results)
+        metrics_res = eval_metrics(results, self.config['data_path'], self.config['top_k'])
         print('*' * 10 + ' eval metrics ' + '*' * 10)
         print(json.dumps(metrics_res, indent=2))
         return metrics_res[self.config['eval_metric']]
 
     @staticmethod
-    def format_results(batch: Dict[str, torch.Tensor], labels: List[int],
-                       preds: List[int], results: Dict[str, dict]) -> None:
+    def format_results(batch: Dict[str, torch.Tensor], labels: List[int], preds: List[int],
+                       logits: List[float], results: Dict[str, dict]) -> None:
         """Reformat evaluation results to facilitate the calculation of metrics.
 
         Args:
             batch: batch data
             labels: ground truth
             preds: model output
+            logits: preds corresponding logits
             results: save labels and pred based on dialogue id, turn id
         """
-        for i, (pred, label, belief_state, dialogue_idx, turn_id) in enumerate(
-                zip(preds, labels, batch['belief_states'],
+        for i, (logit, pred, label, belief_state, dialogue_idx, turn_id) in enumerate(
+                zip(logits, preds, labels, batch['belief_states'],
                     batch['dialogue_idxs'], batch['turn_ids'])):
             if turn_id not in results[dialogue_idx]:
                 results[dialogue_idx][turn_id] = {}
             if 'preds' not in results[dialogue_idx][turn_id]:
-                results[dialogue_idx][turn_id] = {'preds': [], 'labels': [], 'belief_state': belief_state}
+                results[dialogue_idx][turn_id] = {'logits': [], 'preds': [], 'labels': [], 'belief_state': belief_state}
 
             triple = (batch['domains'][i], batch['slots'][i], batch['values'][i])
             if pred == 1:
                 results[dialogue_idx][turn_id]['preds'].append(triple)
+                results[dialogue_idx][turn_id]['logits'].append(logit)
             if label == 1:
                 results[dialogue_idx][turn_id]['labels'].append(triple)
 
@@ -405,7 +409,7 @@ class Trainer:
                 best_metric = eval_metric
                 self.save(epoch, best_metric)
 
-    def save(self, epoch: int, best_metric: str) -> None:
+    def save(self, epoch: int, best_metric: float) -> None:
         """Save the best model according to specified metric.
 
         Args:
@@ -427,13 +431,13 @@ def main():
     common_config_name = 'dst/bert/common.json'
 
     data_urls = {
-        'train4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/train4bert_dst.json',
-        'dev4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/dev4bert_dst.json',
-        'test4bert_dst.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/test4bert_dst.json',
-        'cleaned_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/cleaned_ontology.json',
-        'config.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/config.json',
-        'pytorch_model.bin': 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_model.bin',
-        'vocab.txt': 'http://qiw2jpwfc.hn-bkt.clouddn.com/vocab.txt'
+        'train4bert_dst.json': 'http://xbot.bslience.cn/train4bert_dst.json',
+        'dev4bert_dst.json': 'http://xbot.bslience.cn/dev4bert_dst.json',
+        'test4bert_dst.json': 'http://xbot.bslience.cn/test4bert_dst.json',
+        'cleaned_ontology.json': 'http://xbot.bslience.cn/cleaned_ontology.json',
+        'config.json': 'http://xbot.bslience.cn/bert-base-chinese/config.json',
+        'pytorch_model.bin': 'http://xbot.bslience.cn/bert-base-chinese/pytorch_model.bin',
+        'vocab.txt': 'http://xbot.bslience.cn/bert-base-chinese/vocab.txt'
     }
 
     # load config
@@ -466,25 +470,8 @@ def main():
     trainer = Trainer(train_config)
     trainer.train()
     trainer.eval_test()
-    # {   "turn_inform": 0.03,   "turn_request": 0.11,   "joint_goal": 0.0 }
+    get_recall(train_config['data_path'])
 
 
 if __name__ == '__main__':
     main()
-    # with open('bad_cases.json', 'r', encoding='utf8') as f:
-    #     bad_cases = json.load(f)
-    #
-    # tp = 0
-    # total = 0
-    # for dial_id, dial in bad_cases.items():
-    #     for turn_id, turn in dial.items():
-    #         pred_inform = [tuple(item) for item in turn['pred_inform']]
-    #         pred_request = [tuple(item) for item in turn['pred_request']]
-    #         gold_inform = [tuple(item) for item in turn['gold_inform']]
-    #         gold_request = [tuple(item) for item in turn['gold_request']]
-    #         tp += len(set(pred_inform) & set(gold_inform))
-    #         tp += len(set(pred_request) & set(gold_request))
-    #         total += len(gold_inform)
-    #         total += len(gold_request)
-    #
-    # print(f'recall: {tp / total}')

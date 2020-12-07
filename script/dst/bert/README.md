@@ -115,3 +115,19 @@ single-domain `Dialogue State Tracking` method is difficult to apply in cross-do
 between the training phase and the inference phase, can we increase the ratio of negative samples appropriately, 
 for example, 1:3 (this ratio is randomly determined , you can try other values at will), 
 after experiments, it is found that it does have a little effect, and the accuracy is slightly improved
+3. Observing bad cases, we can find that some correctly predicted values are replaced by incorrectly predicted values, 
+So we can group these values according to their domain-slot pair, then sort them by model output's logits, take the 
+value corresponding to the largest logit as the value of the current domain-slot. Meanwhile, to reduce total number 
+of predicted labels, here we take top 5 of predictions. The following table is the experimental results, Although we 
+have taken some measures, the results are still not satisfactory. 
+
+    | pos-neg-ratio (pos:neg) | ranking | turn-inform | turn-request | joint-goal |
+    | :---------------------: | :-----: | :---------: | :----------: | :--------: |
+    |           1:3           |    -    |    0.030    |    0.110     |   0.000    |
+    |           1:5           |    -    |    0.062    |    0.138     |   0.000    |
+    |           1:5           | top-10  |    0.100    |    0.263     |   0.000    |
+    |           1:5           |  top-6  |    0.237    |    0.362     |   0.025    |
+    |           1:5           |  top-5  |    0.275    |    0.362     |   0.025    |
+
+4. You can give full play to your imagination to improve the model, you can refer to [TriPy](https://arxiv.org/pdf/2005.02877). 
+Or extract single-domain data from CrossWOZ and train a single-domain BERT-DST
