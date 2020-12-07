@@ -5,16 +5,16 @@ import random
 from copy import deepcopy
 from functools import partial
 from collections import defaultdict
-from typing import List, Tuple, Set, Dict, Optional
+from typing import List, Tuple, Dict, Optional
 
 from tqdm import tqdm, trange
 
 import torch
 import torch.nn as nn
 import torch.optim as opt
+import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
-import pytorch_lightning as pl
 from transformers import BertTokenizer, BertForSequenceClassification, BertConfig
 
 from xbot.util.path import get_data_path
@@ -64,7 +64,7 @@ class Trainer:
         raw_data_path = os.path.join(self.config['raw_data_path'], f'{data_type}.json.zip')
         filename = f'{data_type}.json'
         output_path = os.path.join(self.config['data_path'], filename)
-        if not self.config['use_data_cache']:
+        if not os.path.exists(output_path) or not self.config['use_data_cache']:
             examples = preprocess(raw_data_path, output_path, filename)
         else:
             print(f'Loading {data_type} data from cache ...')
@@ -129,16 +129,13 @@ class Trainer:
 
     @staticmethod
     def format_results(batch: dict, labels: torch.Tensor, preds: torch.Tensor, results: dict) -> None:
-        """
+        """Reformat evaluation results to facilitate the calculation of metrics.
 
         Args:
-            batch:
-            labels:
-            preds:
-            results:
-
-        Returns:
-
+            batch: batch data
+            labels: ground truth
+            preds: model outputs
+            results: preds corresponding logits
         """
         for dial_id, turn_id, pred, label in zip(batch['dial_ids'], batch['turn_ids'],
                                                  preds, labels):
@@ -153,7 +150,19 @@ class Trainer:
                 if la == 1:
                     results[dial_id][turn_id]['labels'].append(ACT_ONTOLOGY[i])
 
-    def evaluation(self, dataloader, epoch=None, mode='dev'):
+    def evaluation(self, dataloader: DataLoader, epoch: Optional[int] = None,
+                   mode: str = 'dev') -> Tuple[float, dict]:
+        """Evaluation on dev dataset or test dataset.
+        calculate `accuracy`, `precision`, `recall`, `f1` and `joint_accuracy`
+
+        Args:
+            dataloader: see torch.utils.data.DataLoader
+            epoch: current training epochs
+            mode: train, dev or test
+
+        Returns:
+            specified metric value and formatted prediction results
+        """
         self.model.eval()
         desc_prefix = 'Evaluating' if mode == 'dev' else 'Testing'
         eval_bar = tqdm(enumerate(dataloader), total=len(dataloader),
@@ -183,7 +192,8 @@ class Trainer:
         print(json.dumps(metrics_res, indent=2))
         return metrics_res[self.config['eval_metric']], prediction_results
 
-    def train(self):
+    def train(self) -> None:
+        """Training."""
         epoch_bar = trange(0, self.config['num_epochs'], desc='Epoch')
         best_metric = 0
 
@@ -212,7 +222,12 @@ class Trainer:
                 best_metric = eval_metric
                 self.save(epoch, best_metric)
 
-    def save(self, epoch, best_metric):
+    def save(self, epoch: int, best_metric: float) -> None:
+        """Save the best model according to specified metric.
+        Args:
+            epoch: current training epoch
+            best_metric: specified metric
+        """
         save_name = f'Epoch-{epoch}-{self.config["eval_metric"]}-{best_metric:.3f}'
         self.best_model_path = os.path.join(self.config['output_dir'], save_name)
         if not os.path.exists(self.best_model_path):
@@ -222,7 +237,8 @@ class Trainer:
         model_to_save.cpu().save_pretrained(self.best_model_path)
         self.tokenizer.save_pretrained(self.best_model_path)
 
-    def eval_test(self):
+    def eval_test(self) -> None:
+        """Loading best model to evaluate test dataset."""
         if self.best_model_path is not None:
             if hasattr(self.model, 'module'):
                 self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
@@ -239,10 +255,10 @@ def main():
     common_config_name = 'policy/bert/common.json'
 
     data_urls = {
-        'config.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/config.json',
-        'pytorch_model.bin': 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch_model.bin',
-        'vocab.txt': 'http://qiw2jpwfc.hn-bkt.clouddn.com/vocab.txt',
-        'act_ontology.json': 'http://qiw2jpwfc.hn-bkt.clouddn.com/act_ontology.json',
+        'config.json': 'http://xbot.bslience.cn/bert-base-chinese/config.json',
+        'pytorch_model.bin': 'http://xbot.bslience.cn/bert-base-chinese/pytorch_model.bin',
+        'vocab.txt': 'http://xbot.bslience.cn/bert-base-chinese/vocab.txt',
+        'act_ontology.json': 'http://xbot.bslience.cn/act_ontology.json',
     }
 
     train_config = update_config(common_config_name, train_config_name, 'crosswoz/policy_bert_data')
@@ -259,7 +275,6 @@ def main():
     pl.seed_everything(train_config['seed'])
     trainer = Trainer(train_config)
     trainer.train()
-    # trainer.best_model_path = '/xhp/xbot/data/crosswoz/policy_bert_data/Epoch-6-f1-0.902'
     trainer.eval_test()
 
 

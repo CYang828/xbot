@@ -1,5 +1,6 @@
 import os
 import random
+from typing import List, Dict, Tuple
 
 import torch
 
@@ -10,48 +11,36 @@ from xbot.util.policy_util import Policy
 from xbot.util.file_util import load_json
 from xbot.util.path import get_config_path
 from xbot.util.download import download_from_url
-from script.policy.bert.utils import NUM_ACT, ACT_ONTOLOGY
 from data.crosswoz.data_process.policy.bert_proprecess import str2id, pad
 
 
 class BertPolicy(Policy):
-    inference_config_path = 'policy/bert/inference.json'
-    common_config_path = 'policy/bert/common.json'
+    inference_config_name = 'policy/bert/inference.json'
+    common_config_name = 'policy/bert/common.json'
 
     data_urls = {
-        'config.json': '',
-        'pytorch_model.bin': '',
-        'vocab.txt': ''
+        'config.json': 'http://xbot.bslience.cn/bert-policy/config.json',
+        'pytorch_model.bin': 'http://xbot.bslience.cn/bert-policy/pytorch_model.bin',
+        'vocab.txt': 'http://xbot.bslience.cn/bert-policy/vocab.txt',
+        'act_ontology.json': 'http://xbot.bslience.cn/bert-policy/act_ontology.json'
     }
 
     def __init__(self):
         super(BertPolicy, self).__init__()
         # load config
-        common_config_path = os.path.join(get_config_path(), BertPolicy.common_config_path)
-        infer_config_path = os.path.join(get_config_path(), BertPolicy.inference_config_path)
-        common_config = load_json(common_config_path)
-        infer_config = load_json(infer_config_path)
-        infer_config.update(common_config)
-        infer_config['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-        infer_config['data_path'] = os.path.join(get_data_path(), 'crosswoz/policy_bert_data')
-        if not os.path.exists(infer_config['data_path']):
-            os.makedirs(infer_config['data_path'])
+        infer_config = self.load_config()
 
         # download data
-        model_dir = os.path.join(infer_config['data_path'], 'Epoch-6-f1-0.902')
+        model_dir = os.path.join(infer_config['data_path'], 'trained_model')
+        # model_dir = os.path.join('/xhp/xbot/output/policy/bert', 'Epoch-19-f1-0.903')
         infer_config['model_dir'] = model_dir
-        for data_key, url in BertPolicy.data_urls.items():
-            if not os.path.exists(model_dir):
-                os.makedirs(model_dir)
-            dst = os.path.join(model_dir, data_key)
-            file_name = data_key.split('.')[0]
-            infer_config[file_name] = dst
-            if not os.path.exists(dst):
-                download_from_url(url, dst)
+        self.download_data(infer_config, model_dir)
+        # 应该保持和训练使用的一致，否则 label 顺序不一致，TODO 训练时对 act_ontology 排序
+        self.act_ontology = load_json(infer_config['act_ontology'])
+        self.num_act = len(self.act_ontology)
 
         model_config = BertConfig.from_pretrained(infer_config['model_dir'])
-        model_config.num_labels = NUM_ACT
+        model_config.num_labels = self.num_act
         self.model = BertForSequenceClassification.from_pretrained(infer_config['model_dir'],
                                                                    config=model_config)
         self.tokenizer = BertTokenizer.from_pretrained(infer_config['model_dir'])
@@ -63,7 +52,53 @@ class BertPolicy(Policy):
         self.config = infer_config
         self.threshold = infer_config['threshold']
 
-    def preprocess(self, belief_state, cur_domain, history):
+    @staticmethod
+    def download_data(infer_config: dict, model_dir: str) -> None:
+        """Download trained model for inference.
+
+        Args:
+            infer_config: config used for inference
+            model_dir: model save directory
+        """
+        for data_key, url in BertPolicy.data_urls.items():
+            if not os.path.exists(model_dir):
+                os.makedirs(model_dir)
+            dst = os.path.join(model_dir, data_key)
+            file_name = data_key.split('.')[0]
+            infer_config[file_name] = dst
+            if not os.path.exists(dst):
+                download_from_url(url, dst)
+
+    @staticmethod
+    def load_config() -> dict:
+        """Load config for inference.
+
+        Returns:
+            config dict
+        """
+        common_config_path = os.path.join(get_config_path(), BertPolicy.common_config_name)
+        infer_config_path = os.path.join(get_config_path(), BertPolicy.inference_config_name)
+        common_config = load_json(common_config_path)
+        infer_config = load_json(infer_config_path)
+        infer_config.update(common_config)
+        infer_config['device'] = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        infer_config['data_path'] = os.path.join(get_data_path(), 'crosswoz/policy_bert_data')
+        if not os.path.exists(infer_config['data_path']):
+            os.makedirs(infer_config['data_path'])
+        return infer_config
+
+    def preprocess(self, belief_state: Dict[str, dict], cur_domain: str,
+                   history: List[tuple]) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Preprocess raw dialogue data to bert inputs.
+
+        Args:
+            belief_state: see `xbot/util/state.py`
+            cur_domain: current domain
+            history: dialogue history, [('usr', 'xxx'), ('sys', 'xxx'), ...]
+
+        Returns:
+            bert inputs, contain input_ids, token_type_ids, attention_mask
+        """
         sys_utter = '对话开始'
         usr_utter = '对话开始'
         if len(history) > 0:
@@ -78,8 +113,17 @@ class BertPolicy(Policy):
         return input_ids, token_type_ids, attention_mask
 
     @staticmethod
-    def get_source(belief_state, cur_domain):
-        """belief_state 要不要换成 sys_state"""
+    def get_source(belief_state: Dict[str, dict], cur_domain: str) -> str:
+        """Take constraints in belief state.
+        TODO: belief_state 要不要换成 sys_state
+
+        Args:
+            belief_state: current belief state
+            cur_domain: current domain
+
+        Returns:
+            concatenate all slot-value pair
+        """
         if cur_domain is None:
             return '无结果'
         source = []
@@ -92,7 +136,15 @@ class BertPolicy(Policy):
             source = '无结果'
         return source
 
-    def predict(self, state):
+    def predict(self, state: dict) -> List[list]:
+        """Predict the next actions of system.
+
+        Args:
+            state: current system state
+
+        Returns:
+            a list of actions of system will take
+        """
         belief_state = state['belief_state']
         cur_domain = state['cur_domain']
         history = state['history']
@@ -106,11 +158,11 @@ class BertPolicy(Policy):
         sys_das = []
         for i, pred in enumerate(preds):
             if pred == 1:
-                act = ACT_ONTOLOGY[i]
+                act = self.act_ontology[i]
                 if '酒店设施' in act:
                     domain, intent, slot, facility = act.split('-')
-                    value = '是' if db_res and facility in db_res['酒店设施'] else '否'
-                    # TODO 原本直接使用 slot + facility，应该重新计算指标
+                    value = ('是' if db_res and '酒店设施' in db_res and
+                             facility in db_res['酒店设施'] else '否')
                     sys_das.append([intent, domain, slot + '-' + facility, value])
                     continue
                 domain, intent, slot = act.split('-')
@@ -120,7 +172,18 @@ class BertPolicy(Policy):
                     self.get_sys_das(db_res, domain, intent, slot, sys_das)
         return sys_das
 
-    def forward(self, belief_state, cur_domain, history):
+    def forward(self, belief_state: Dict[str, dict], cur_domain: str,
+                history: List[tuple]) -> torch.Tensor:
+        """Forward step, get predictions.
+
+        Args:
+            belief_state: see `xbot/util/state.py`
+            cur_domain: current domain
+            history: dialogue history, [('usr', 'xxx'), ('sys', 'xxx'), ...]
+
+        Returns:
+            model predictions
+        """
         input_ids, token_type_ids, attention_mask = [item.to(self.config['device']) for item
                                                      in self.preprocess(belief_state, cur_domain, history)]
         logits = self.model(input_ids=input_ids, token_type_ids=token_type_ids,
@@ -129,7 +192,16 @@ class BertPolicy(Policy):
         preds = (probs > self.threshold).float()
         return preds
 
-    def get_sys_das(self, db_res, domain, intent, slot, sys_das):
+    def get_sys_das(self, db_res: dict, domain: str, intent: str, slot: str, sys_das: list) -> None:
+        """Construct system actions according to different domains and values taken from database.
+
+        Args:
+            db_res: database query results
+            domain: current domain
+            intent: system's intent, such as: Inform, Recommend,...
+            slot: candidate slot, such ad: '价格', '名称', ...
+            sys_das: system actions are saved into sys_das
+        """
         if domain == '地铁':
             if slot == '出发地附近地铁站':
                 value = self.get_metro_das(db_res, '起点')
@@ -152,7 +224,16 @@ class BertPolicy(Policy):
             sys_das.append([intent, domain, slot, value])
 
     @staticmethod
-    def get_metro_das(db_res, slot):
+    def get_metro_das(db_res: dict, slot: str) -> str:
+        """Take departure and destination of metro from database query results.
+
+        Args:
+            db_res: database query results
+            slot: '起点' or '终点'
+
+        Returns:
+            specified departure or destination
+        """
         metros = [res for res in db_res if slot in res[0]]
         value = '无'
         if not metros:
@@ -206,4 +287,4 @@ if __name__ == '__main__':
 
     f1, precision, recall, joint_acc = eval_metrics(sys_state_action_pairs)
     print(f'f1: {f1:.3f}, precision: {precision:.3f}, recall: {recall:.3f}, joint_acc: {joint_acc:.3f}')
-#     f1: 0.477, precision: 0.532, recall: 0.431, joint_acc: 0.351
+    # f1: 0.499, precision: 0.529, recall: 0.472, joint_acc: 0.372
