@@ -1,0 +1,16 @@
+{
+  "random_undersampling": 1,
+  "neg_pos_sampling_ratio": 5,
+  "overall_undersampling_ratio": 0.6,
+  "learning_rate": 2e-5,
+  "max_grad_norm": 10.0,
+  "train_batch_size": 32,
+  "dev_batch_size": 32,
+  "test_batch_size": 32,
+  "num_epochs": 6,
+  "debug": 0,
+  "use_cache_data": 0,
+  "eval_metric": "turn_inform",
+  "num_processes": 32,
+  "num_workers": 4
+}

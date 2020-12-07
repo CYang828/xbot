@@ -81,7 +81,7 @@ if __name__ == '__main__':
                                                     num_training_steps=config['model']['max_step'])
     else:
         for n, p in model.named_parameters():
-            if 'bert' in n:
+            if 'bert_policy' in n:
                 p.requires_grad = False
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=config['model']['learning_rate'])
