@@ -104,7 +104,7 @@ def merge_raw_date(data_type: str) -> None:
     """Merge belief state data into user turn
 
     Args:
-        data_type: train, dev or test
+        data_type: train, dev or tests
     """
     data_path = get_data_path()
     output_dir = os.path.join(data_path, 'crosswoz/dst_bert_data')
@@ -163,6 +163,6 @@ def clean_ontology() -> None:
 
 
 if __name__ == '__main__':
-    # for data_type in ['train', 'dev', 'test']:
+    # for data_type in ['train', 'dev', 'tests']:
     #     merge_raw_date(data_type)
     clean_ontology()

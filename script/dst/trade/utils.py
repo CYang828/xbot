@@ -235,7 +235,7 @@ def prepare_data_seq(config):
                          config['n_gpus'], shuffle=False, config=config)
 
     pair_test, test_max_len = read_langs(test_file_path, gating_dict, slots,
-                                         "test", lang, mem_lang, load_lang, config)
+                                         "tests", lang, mem_lang, load_lang, config)
     test_loader = get_seq(pair_test, lang, mem_lang, eval_batch,
                           config['n_gpus'], shuffle=False, config=config)
 
@@ -255,7 +255,7 @@ def prepare_data_seq(config):
 
     print("Read %s pairs train" % len(pair_train))
     print("Read %s pairs dev" % len(pair_dev))
-    print("Read %s pairs test" % len(pair_test))
+    print("Read %s pairs tests" % len(pair_test))
     print("Vocab_size: %s " % lang.n_words)
     print("Vocab_size Training %s" % train_vocab_size)
     print("Vocab_size Belief %s" % mem_lang.n_words)

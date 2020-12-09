@@ -28,7 +28,7 @@ class Dataloader:
         sample representation: [list of words, list of tags, list of intents, original dialog act]
         :param use_bert_tokenizer:
         :param cut_sen_len:
-        :param data_key: train/val/test
+        :param data_key: train/val/tests
         :param data:
         :return:
         """

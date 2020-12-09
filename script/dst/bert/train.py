@@ -37,12 +37,12 @@ class Trainer:
         start_time = time.time()
         self.train_dataloader = self.load_data(data_path=self.config['train4bert_dst'], data_type='train')
         self.eval_dataloader = self.load_data(data_path=self.config['dev4bert_dst'], data_type='dev')
-        self.test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='test')
+        self.test_dataloader = self.load_data(data_path=self.config['test4bert_dst'], data_type='tests')
         # 增加不使用下采样模拟推理过程，比较评价指标
         self.config['random_undersampling'] = 0
         self.config['overall_undersampling_ratio'] = 0.02  # 为了减少评估时间，可以根据自己的机器能力设定
         self.no_undersampling_test_dataloader = self.load_data(data_path=self.config['test4bert_dst'],
-                                                               data_type='test')
+                                                               data_type='tests')
         elapsed = time.time() - start_time
         print(f'Loading data cost {elapsed}s ...')
 
@@ -83,7 +83,7 @@ class Trainer:
 
         Args:
             dials: raw dialogues data
-            data_type: train, dev or test
+            data_type: train, dev or tests
             pos_examples: all positive examples are saved in pos_examples
             neg_examples: all negative examples are saved in pos_examples
             process_id: current Process id
@@ -219,7 +219,7 @@ class Trainer:
         Args:
             data_path: raw dialogue data path
             data_cache_path: data save path
-            data_type: train, dev or test
+            data_type: train, dev or tests
 
         Returns:
             examples, mix up positive and negative examples
@@ -249,7 +249,7 @@ class Trainer:
         """Use multiprocessing to process raw dialogue data.
 
         Args:
-            data_type: train, dev or test
+            data_type: train, dev or tests
             dials: raw dialogues data
 
         Returns:
@@ -276,7 +276,7 @@ class Trainer:
 
         Args:
             data_path: raw dialogue data
-            data_type: train, dev or test
+            data_type: train, dev or tests
 
         Returns:
             dataloader, see torch.utils.data.DataLoader,
@@ -302,14 +302,14 @@ class Trainer:
         return dataloader
 
     def evaluation(self, dataloader: DataLoader, epoch: Optional[int] = None, mode: str = 'dev') -> float:
-        """Evaluation on dev dataset or test dataset.
+        """Evaluation on dev dataset or tests dataset.
 
         calculate `turn_inform` accuracy, `turn_request` accuracy and `joint_goal` accuracy
 
         Args:
             dataloader: see torch.utils.data.DataLoader
             epoch: current training epochs
-            mode: train, dev or test
+            mode: train, dev or tests
 
         Returns:
             specified metric value
@@ -370,15 +370,15 @@ class Trainer:
                 results[dialogue_idx][turn_id]['labels'].append(triple)
 
     def eval_test(self) -> None:
-        """Loading best model to evaluate test dataset."""
+        """Loading best model to evaluate tests dataset."""
         if self.best_model_path is not None:
             if hasattr(self.model, 'module'):
                 self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
             else:
                 self.model = BertForSequenceClassification.from_pretrained(self.best_model_path)
             self.model.to(self.config['device'])
-        self.evaluation(self.test_dataloader, mode='test')
-        self.evaluation(self.no_undersampling_test_dataloader, mode='test')
+        self.evaluation(self.test_dataloader, mode='tests')
+        self.evaluation(self.no_undersampling_test_dataloader, mode='tests')
 
     def train(self) -> None:
         """Training."""

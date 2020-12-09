@@ -55,9 +55,9 @@ def preprocess(raw_data_path: str, output_path: str, data_type: str) -> List[Dic
     """Preprocess raw data to generate model inputs.
 
     Args:
-        raw_data_path: raw (train, dev, test) data path
+        raw_data_path: raw (train, dev, tests) data path
         output_path: save path of precessed data file
-        data_type: train, dev or test
+        data_type: train, dev or tests
 
     Returns:
         precessed data

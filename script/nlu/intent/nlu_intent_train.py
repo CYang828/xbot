@@ -51,7 +51,7 @@ if __name__ == '__main__':
                             pretrained_weights=config['model']['pretrained_weights'])
 
     # load data
-    for data_key in ['train', 'val', 'test']:
+    for data_key in ['train', 'val', 'tests']:
         dataloader.load_data(json.load(open(os.path.join(data_path, 'intent_{}_data.json'.format(data_key)),
                                             encoding="utf-8")), data_key, cut_sen_len=config['cut_sen_len'],
                              use_bert_tokenizer=config['use_bert_tokenizer'])

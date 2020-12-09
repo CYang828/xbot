@@ -46,7 +46,7 @@ if __name__ == '__main__':
     intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json'), encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
-    for data_key in ['val', 'test']:
+    for data_key in ['val', 'tests']:
         dataloader.load_data(
             json.load(open(os.path.join(data_dir, 'intent_{}_data.json'.format(data_key)), encoding="utf-8")),
             data_key,
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     model.eval()
 
     batch_size = config['model']['batch_size']
-    data_key = 'test'
+    data_key = 'tests'
     predict_golden = {'intent': []}
     intent_loss = 0
     for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key=data_key):

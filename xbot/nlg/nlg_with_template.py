@@ -426,7 +426,7 @@ class TemplateNLG(NLG):
 
 def example():
     data_dir = '../../../../data/crosswoz/'
-    train_data = read_zipped_json(os.path.join(data_dir, 'test.json.zip'), 'test.json')
+    train_data = read_zipped_json(os.path.join(data_dir, 'tests.json.zip'), 'tests.json')
     messages = [d["messages"] for d in train_data.values()]
     for i in range(100):
         for message in random.choices(messages):

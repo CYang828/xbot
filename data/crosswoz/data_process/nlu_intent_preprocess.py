@@ -19,7 +19,7 @@ def preprocess():
     if not os.path.exists(processed_data_dir):
         os.makedirs(processed_data_dir)
     print(data_dir)
-    data_key = ['train', 'val', 'test']
+    data_key = ['train', 'val', 'tests']
     data = {}
     for key in data_key:
         data[key] = read_zipped_json(os.path.join(data_dir, key + '.json.zip'), key + '.json')

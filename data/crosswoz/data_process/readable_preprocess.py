@@ -17,14 +17,14 @@ def preprocess(mode):
     assert mode == 'all' or mode == 'usr' or mode == 'sys'
 
     # path
-    data_key = ['train', 'val', 'test']
+    data_key = ['train', 'val', 'tests']
     data = {}
     for key in data_key:
         # read crosswoz source data from json.zip
         data[key] = read_zipped_json(os.path.join(get_data_path(), 'crosswoz/raw', key + '.json.zip'), key + '.json')
         print('load {}, size {}'.format(key, len(data[key])))
 
-    # generate train, val, test dataset
+    # generate train, val, tests dataset
     for key in data_key:
         sessions = []
         for no, sess in data[key].items():

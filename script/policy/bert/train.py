@@ -38,7 +38,7 @@ class Trainer:
         start_time = time.time()
         self.train_dataloader = self.load_data('train')
         self.eval_dataloader = self.load_data('val')
-        self.test_dataloader = self.load_data('test')
+        self.test_dataloader = self.load_data('tests')
         elapsed_time = time.time() - start_time
         print(f'Loading data cost {elapsed_time}s ...')
 
@@ -56,7 +56,7 @@ class Trainer:
         """Load data from data cache or build from scratch.
 
         Args:
-            data_type: train, dev or test
+            data_type: train, dev or tests
 
         Returns:
             DataLoader, see torch.utils.data.DataLoader
@@ -152,13 +152,13 @@ class Trainer:
 
     def evaluation(self, dataloader: DataLoader, epoch: Optional[int] = None,
                    mode: str = 'dev') -> Tuple[float, dict]:
-        """Evaluation on dev dataset or test dataset.
+        """Evaluation on dev dataset or tests dataset.
         calculate `accuracy`, `precision`, `recall`, `f1` and `joint_accuracy`
 
         Args:
             dataloader: see torch.utils.data.DataLoader
             epoch: current training epochs
-            mode: train, dev or test
+            mode: train, dev or tests
 
         Returns:
             specified metric value and formatted prediction results
@@ -238,7 +238,7 @@ class Trainer:
         self.tokenizer.save_pretrained(self.best_model_path)
 
     def eval_test(self) -> None:
-        """Loading best model to evaluate test dataset."""
+        """Loading best model to evaluate tests dataset."""
         if self.best_model_path is not None:
             if hasattr(self.model, 'module'):
                 self.model.module = BertForSequenceClassification.from_pretrained(self.best_model_path)
@@ -246,7 +246,7 @@ class Trainer:
                 self.model = BertForSequenceClassification.from_pretrained(self.best_model_path)
             self.model.to(self.config['device'])
 
-        _, prediction_results = self.evaluation(self.test_dataloader, mode='test')
+        _, prediction_results = self.evaluation(self.test_dataloader, mode='tests')
         dump_json(prediction_results, os.path.join(self.config['data_path'], 'prediction.json'))
 
 

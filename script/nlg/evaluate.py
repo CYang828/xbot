@@ -175,7 +175,7 @@ if __name__ == '__main__':
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(cur_dir, '../../data/crosswoz/raw/test.json.zip')
     archive = zipfile.ZipFile(file_path, 'r')
-    test_data = json.load(archive.open('test.json'))
+    test_data = json.load(archive.open('tests.json'))
 
     dialog_acts = []
     golden_utts = []

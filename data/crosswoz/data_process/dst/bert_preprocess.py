@@ -72,7 +72,7 @@ def collate_fn(examples: List[tuple], mode: str = 'train') -> dict:
 
     Args:
         examples: list of (input_ids, token_type_ids, domain, slot, value, ...)
-        mode: train, dev, test, infer
+        mode: train, dev, tests, infer
 
     Returns:
         batch data

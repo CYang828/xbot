@@ -20,7 +20,7 @@ def preprocess(mode):
     if not os.path.exists(processed_data_dir):
         os.makedirs(processed_data_dir)
 
-    data_key = ['train', 'val', 'test']
+    data_key = ['train', 'val', 'tests']
     data = {}
     for key in data_key:
         # read crosswoz source data from json.zip
@@ -33,7 +33,7 @@ def preprocess(mode):
     context_size = 3
     tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert_policy-wwm-ext")
 
-    # generate train, val, test dataset
+    # generate train, val, tests dataset
     for key in data_key:
         processed_data[key] = []
         for no, sess in data[key].items():

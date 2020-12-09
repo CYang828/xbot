@@ -22,7 +22,7 @@ class Trainer:
         data_preprocessor = DataPreprocessor(config, vector)
         self.data_train = data_preprocessor.create_dataset('train', config['batch_size'])
         self.data_valid = data_preprocessor.create_dataset('val', config['batch_size'])
-        self.data_test = data_preprocessor.create_dataset('test', config['batch_size'])
+        self.data_test = data_preprocessor.create_dataset('tests', config['batch_size'])
 
         self.save_dir = config['output_dir']
         self.print_per_batch = config['print_per_batch']
