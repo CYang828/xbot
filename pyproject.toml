@@ -49,5 +49,5 @@ fail_under = 80
 xbot = "src.xbot.cli:main"
 
 [build-system]
-requires = ["poetry>=1.0.0"]
-build-backend = "poetry.masonry.api"
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
