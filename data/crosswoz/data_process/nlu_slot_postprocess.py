@@ -3,8 +3,8 @@ import torch
 
 
 def is_slot_da(da):
-    tag_da = {'Inform', 'Recommend'}
-    not_tag_slot = '酒店设施'
+    tag_da = {"Inform", "Recommend"}
+    not_tag_slot = "酒店设施"
     if da[0] in tag_da and not_tag_slot not in da[2]:
         return True
     return False
@@ -13,8 +13,8 @@ def is_slot_da(da):
 def calculate_f1(predict_golden):
     tp, fp, fn = 0, 0, 0
     for item in predict_golden:
-        predicts = item['predict']
-        labels = item['golden']
+        predicts = item["predict"]
+        labels = item["golden"]
         for ele in predicts:
             if ele in labels:
                 tp += 1
@@ -23,9 +23,9 @@ def calculate_f1(predict_golden):
         for ele in labels:
             if ele not in predicts:
                 fn += 1
-    precision = 1.0 * tp / (tp + fp) if tp + fp else 0.
-    recall = 1.0 * tp / (tp + fn) if tp + fn else 0.
-    F1 = 2.0 * precision * recall / (precision + recall) if precision + recall else 0.
+    precision = 1.0 * tp / (tp + fp) if tp + fp else 0.0
+    recall = 1.0 * tp / (tp + fn) if tp + fn else 0.0
+    F1 = 2.0 * precision * recall / (precision + recall) if precision + recall else 0.0
     return precision, recall, F1
 
 
@@ -35,14 +35,14 @@ def tag2das(word_seq, tag_seq):
     i = 0
     while i < len(tag_seq):
         tag = tag_seq[i]
-        if tag.startswith('B'):
-            intent, domain, slot = tag[2:].split('+')
+        if tag.startswith("B"):
+            intent, domain, slot = tag[2:].split("+")
             value = word_seq[i]
             j = i + 1
             while j < len(tag_seq):
-                if tag_seq[j].startswith('I') and tag_seq[j][2:] == tag[2:]:
+                if tag_seq[j].startswith("I") and tag_seq[j][2:] == tag[2:]:
                     # tag_seq[j][2:].split('+')[-1]==slot or tag_seq[j][2:] == tag[2:]
-                    if word_seq[j].startswith('##'):
+                    if word_seq[j].startswith("##"):
                         value += word_seq[j][2:]
                     else:
                         value += word_seq[j]
@@ -58,7 +58,7 @@ def tag2das(word_seq, tag_seq):
 def intent2das(intent_seq):
     triples = []
     for intent in intent_seq:
-        intent, domain, slot, value = re.split('\+', intent)
+        intent, domain, slot, value = re.split("\+", intent)
         triples.append([intent, domain, slot, value])
     return triples
 

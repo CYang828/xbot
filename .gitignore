@@ -144,3 +144,11 @@ xbot.egg-info/
 dist/
 events*
 *.pt
+.nox/*
+.pytype/
+poetry.lock
+src/xbot/data/all_data/
+src/xbot/nlu/intent/~/.xbot-model/pytorch-intent-with-bert.bin
+src/xbot/nlu/intent/~/.xbot/
+.pytype/*
+log/all_context/*
