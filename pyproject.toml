@@ -31,8 +31,6 @@ xdoctest = "^0.15.0"
 Sphinx = "^3.3.1"
 sphinx-autodoc-typehints = "^1.11.1"
 codecov = "^2.1.10"
-tox = "^3.20.1"
-nox = "^2020.8.22"
 pre-commit = "^2.9.3"
 
 [tool.pytest.ini_options]
