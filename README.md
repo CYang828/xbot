@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/BSlience/xbot.svg?branch=master)](https://travis-ci.com/BSlience/xbot)
+
 # XBot
 This is a chatbot for X.
 
