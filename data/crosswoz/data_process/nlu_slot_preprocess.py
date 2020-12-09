@@ -21,9 +21,9 @@ def preprocess(mode):
     processed_data_dir = os.path.join(cur_dir,'slot_temp_data/{}_data'.format(mode))
     if not os.path.exists(processed_data_dir):
         os.makedirs(processed_data_dir)
-    data_key = ['train', 'val', 'test']
+    data_key = ['train', 'val', 'tests']
     data = {}
-    ##导入train，test,val文件
+    ##导入train，tests,val文件
     for key in data_key:
         data[key] = read_zipped_json(os.path.join(data_dir, key + '.json.zip'), key + '.json')
         print('load {}, size {}'.format(key, len(data[key])))
@@ -33,7 +33,7 @@ def preprocess(mode):
 
     context_size = 3
     #BERT-wwm-ext是哈工大讯飞联合实验室发布的中文预训练模型
-    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
+    tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert_policy-wwm-ext")
 
     for key in data_key:
         processed_data[key] = []

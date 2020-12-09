@@ -126,7 +126,7 @@ class JointWithBertPredictor(NLU):
     """NLU Joint with Bert 预测器"""
 
     default_model_config = 'nlu/crosswoz_all_context_joint_nlu.json'
-    default_model_name = 'pytorch-joint-with-bert.pt'
+    default_model_name = 'pytorch-joint-with-bert_policy.pt'
     default_model_url = 'http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-joint-with-bert.pt'
 
     def __init__(self):

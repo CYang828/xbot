@@ -35,7 +35,7 @@ if __name__ == '__main__':
                             pretrained_weights=config['model']['pretrained_weights'])
     print('intent num:', len(intent_vocab))
     print('tag num:', len(tag_vocab))
-    for data_key in ['val', 'test']:
+    for data_key in ['val', 'tests']:
         dataloader.load_data(json.load(open(os.path.join(data_dir, '{}_data.json'.format(data_key)))), data_key,
                              cut_sen_len=0, use_bert_tokenizer=config['use_bert_tokenizer'])
         print('{} set size: {}'.format(data_key, len(dataloader.data[data_key])))
@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     batch_size = config['model']['batch_size']
 
-    data_key = 'test'
+    data_key = 'tests'
     predict_golden = {'intent': [], 'slot': [], 'overall': []}
     slot_loss, intent_loss = 0, 0
     for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(batch_size, data_key=data_key):

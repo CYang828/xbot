@@ -20,6 +20,10 @@ def dump_json(content, filepath):
     json.dump(content, open(filepath, 'w', encoding='utf-8'), indent=2, ensure_ascii=False)
 
 
+def load_json(filepath):
+    return json.load(open(filepath, 'r', encoding='utf-8'))
+
+
 def write_zipped_json(zip_path, filepath):
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         zf.write(filepath)

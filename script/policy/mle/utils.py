@@ -33,7 +33,7 @@ class DataPreprocessor:
 
     def _build_data(self, root_dir, processed_dir):
         raw_data = {}
-        for part in ['train', 'val', 'test']:
+        for part in ['train', 'val', 'tests']:
             archive = zipfile.ZipFile(os.path.join(root_dir, f'{part}.json.zip'), 'r')
             with archive.open(f'{part}.json', 'r') as f:
                 raw_data[part] = json.load(f)
@@ -41,7 +41,7 @@ class DataPreprocessor:
         self.data = {}
         # for cur domain update
         dst = RuleDST()
-        for part in ['train', 'val', 'test']:
+        for part in ['train', 'val', 'tests']:
             self.data[part] = []
 
             for key in tqdm(raw_data[part], desc=part, total=len(raw_data[part])):
@@ -67,12 +67,12 @@ class DataPreprocessor:
                         dst.state['system_action'] = turn['dialog_act']
 
         os.makedirs(processed_dir, exist_ok=True)
-        for part in ['train', 'val', 'test']:
+        for part in ['train', 'val', 'tests']:
             torch.save(self.data[part], os.path.join(processed_dir, f'{part}.pt'))
 
     def _load_data(self, processed_dir):
         self.data = {}
-        for part in ['train', 'val', 'test']:
+        for part in ['train', 'val', 'tests']:
             self.data[part] = torch.load(os.path.join(processed_dir, f'{part}.pt'))
 
     def create_dataset(self, part, batch_size):

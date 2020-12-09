@@ -41,7 +41,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit tests / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -135,6 +135,8 @@ dmypy.json
 *.log
 data/crosswoz/*_data/
 data/crosswoz/raw
+data/crosswoz/.DS_Store
+data/.DS_Store
 log/*
 output/*
 build/

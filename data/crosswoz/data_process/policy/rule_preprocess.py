@@ -25,7 +25,7 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
-    datasets = ['train', 'val', 'test']
+    datasets = ['train', 'val', 'tests']
     for dataset in tqdm(datasets):
         output_file_name = dataset + '.json'
         input_file_name = output_file_name + '.zip'

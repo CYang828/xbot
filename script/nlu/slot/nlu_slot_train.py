@@ -49,7 +49,7 @@ if __name__ == '__main__':
     tag_vocab = json.load(open(os.path.join(data_path, 'tag_vocab.json'), encoding="utf-8"))
     dataloader = Dataloader(intent_vocab=intent_vocab, tag_vocab=tag_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
-    for data_key in ['train', 'val', 'test']:
+    for data_key in ['train', 'val', 'tests']:
         dataloader.load_data(
             json.load(open(os.path.join(data_path, 'slot_{}_data.json'.format(data_key)), encoding="utf-8")), data_key,
             cut_sen_len=config['cut_sen_len'], use_bert_tokenizer=config['use_bert_tokenizer'])
@@ -81,7 +81,7 @@ if __name__ == '__main__':
                                                     num_training_steps=config['model']['max_step'])
     else:
         for n, p in model.named_parameters():
-            if 'bert' in n:
+            if 'bert_policy' in n:
                 p.requires_grad = False
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=config['model']['learning_rate'])

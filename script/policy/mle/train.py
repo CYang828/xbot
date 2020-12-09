@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from xbot.util.download import download_from_url
 from xbot.dm.policy.mle_policy.mle import MultiDiscretePolicy
-from script.policy.utils import DataPreprocessor, f1, set_seed
+from script.policy.mle.utils import DataPreprocessor, f1, set_seed
 from xbot.util.path import get_data_path, get_root_path, get_config_path
 from data.crosswoz.data_process.policy.mle_preprocess import CrossWozVector
 
@@ -22,7 +22,7 @@ class Trainer:
         data_preprocessor = DataPreprocessor(config, vector)
         self.data_train = data_preprocessor.create_dataset('train', config['batch_size'])
         self.data_valid = data_preprocessor.create_dataset('val', config['batch_size'])
-        self.data_test = data_preprocessor.create_dataset('test', config['batch_size'])
+        self.data_test = data_preprocessor.create_dataset('tests', config['batch_size'])
 
         self.save_dir = config['output_dir']
         self.print_per_batch = config['print_per_batch']

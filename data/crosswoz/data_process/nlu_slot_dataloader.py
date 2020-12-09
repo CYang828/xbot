@@ -26,7 +26,7 @@ class Dataloader:
     def load_data(self, data, data_key, cut_sen_len, use_bert_tokenizer=True):
         """
         sample representation: [list of words, list of tags, list of intents, original dialog act]
-        :param data_key: train/val/test
+        :param data_key: train/val/tests
         :param data:
         :return:
         """
