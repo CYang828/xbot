@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.com/BSlience/xbot.svg?branch=master)](https://travis-ci.com/BSlience/xbot)
 [![Tests](https://github.com/BSlience/xbot/workflows/Tests/badge.svg)](https://github.com/BSlience/xbot/actions?workflow=Tests)
 
 # XBot
