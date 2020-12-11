@@ -11,6 +11,7 @@ install:
   - poetry install --no-root
 script:
   - poetry run make clean
+
 #- make lint
 #- make tests
 #- make safety
