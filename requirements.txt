@@ -1,9 +1,0 @@
-transformers
-torch
-tensorflow
-numpy>=1.16.0
-tqdm
-requests
-pytorch-lightning
-boto3
-botocore

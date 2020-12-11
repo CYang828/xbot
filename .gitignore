@@ -41,7 +41,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit tests / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -93,7 +93,6 @@ ipython_config.py
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
 #   having no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
-#Pipfile.lock
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
@@ -144,3 +143,10 @@ xbot.egg-info/
 dist/
 events*
 *.pt
+.nox/*
+.pytype/
+src/xbot/data/all_data/
+src/xbot/nlu/intent/~/.xbot-model/pytorch-intent-with-bert.bin
+src/xbot/nlu/intent/~/.xbot/
+.pytype/*
+log/all_context/*

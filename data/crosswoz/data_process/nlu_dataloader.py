@@ -28,12 +28,12 @@ class Dataloader:
     def load_data(self, data, data_key, cut_sen_len, use_bert_tokenizer=True):
         """
         sample representation: [list of words, list of tags, list of intents, original dialog act]
-        :param data_key: train/val/test
+        :param data_key: train/val/tests
         :param data:
         :return:
         """
-        #data是[tokens, tags, intents, golden, context[-context_size:]]]五个纬度的嵌套列表
-        #tokens是切分的得到的词，tags是可以看作词对应的slot标签，
+        # data是[tokens, tags, intents, golden, context[-context_size:]]]五个纬度的嵌套列表
+        # tokens是切分的得到的词，tags是可以看作词对应的slot标签，
 
         self.data[data_key] = data
         max_sen_len, max_context_len = 0, 0
@@ -46,9 +46,9 @@ class Dataloader:
             if cut_sen_len > 0:
                 d[0] = d[0][:cut_sen_len]
                 d[1] = d[1][:cut_sen_len]
-                d[4] = [' '.join(s.split()[:cut_sen_len]) for s in d[4]]
+                d[4] = [" ".join(s.split()[:cut_sen_len]) for s in d[4]]
 
-            d[4] = self.tokenizer.encode('[CLS] ' + ' [SEP] '.join(d[4]))
+            d[4] = self.tokenizer.encode("[CLS] " + " [SEP] ".join(d[4]))
             max_context_len = max(max_context_len, len(d[4]))
             context_len.append(len(d[4]))
 
@@ -63,37 +63,41 @@ class Dataloader:
             d.append(self.seq_tag2id(tag_seq))
             d.append(self.seq_intent2id(d[2]))
             # d = (tokens, tags, intents, da2triples(turn["dialog_act"]), context(token id), new2ori, new_word_seq, tag2id_seq, intent2id_seq)
-            if data_key=='train':
+            if data_key == "train":
                 for intent_id in d[-1]:
                     self.intent_weight[intent_id] += 1
-        if data_key == 'train':
-            train_size = len(self.data['train'])
+        if data_key == "train":
+            train_size = len(self.data["train"])
             for intent, intent_id in self.intent2id.items():
-                neg_pos = (train_size - self.intent_weight[intent_id]) / self.intent_weight[intent_id]
+                neg_pos = (
+                    train_size - self.intent_weight[intent_id]
+                ) / self.intent_weight[intent_id]
                 self.intent_weight[intent_id] = np.log10(neg_pos)
             self.intent_weight = torch.tensor(self.intent_weight)
-        print('max sen bert_policy len', max_sen_len)
+        print("max sen bert_policy len", max_sen_len)
         print(sorted(Counter(sen_len).items()))
-        print('max context bert_policy len', max_context_len)
+        print("max context bert_policy len", max_context_len)
         print(sorted(Counter(context_len).items()))
 
     def bert_tokenize(self, word_seq, tag_seq):
         split_tokens = []
         new_tag_seq = []
         new2ori = {}
-        basic_tokens = self.tokenizer.basic_tokenizer.tokenize(' '.join(word_seq))
-        accum = ''
+        basic_tokens = self.tokenizer.basic_tokenizer.tokenize(" ".join(word_seq))
+        accum = ""
         i, j = 0, 0
         for i, token in enumerate(basic_tokens):
             if (accum + token).lower() == word_seq[j].lower():
-                accum = ''
+                accum = ""
             else:
                 accum += token
-            for sub_token in self.tokenizer.wordpiece_tokenizer.tokenize(basic_tokens[i]):
+            for sub_token in self.tokenizer.wordpiece_tokenizer.tokenize(
+                basic_tokens[i]
+            ):
                 new2ori[len(new_tag_seq)] = j
                 split_tokens.append(sub_token)
                 new_tag_seq.append(tag_seq[j])
-            if accum == '':
+            if accum == "":
                 j += 1
         return split_tokens, new_tag_seq, new2ori
 
@@ -118,33 +122,45 @@ class Dataloader:
         tag_seq_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         intent_tensor = torch.zeros((batch_size, self.intent_dim), dtype=torch.float)
         context_max_seq_len = max([len(x[-5]) for x in batch_data])
-        context_mask_tensor = torch.zeros((batch_size, context_max_seq_len), dtype=torch.long)
-        context_seq_tensor = torch.zeros((batch_size, context_max_seq_len), dtype=torch.long)
+        context_mask_tensor = torch.zeros(
+            (batch_size, context_max_seq_len), dtype=torch.long
+        )
+        context_seq_tensor = torch.zeros(
+            (batch_size, context_max_seq_len), dtype=torch.long
+        )
         for i in range(batch_size):
             words = batch_data[i][-3]  #
             tags = batch_data[i][-2]
             intents = batch_data[i][-1]
-            words = ['[CLS]'] + words + ['[SEP]']
+            words = ["[CLS]"] + words + ["[SEP]"]
             indexed_tokens = self.tokenizer.convert_tokens_to_ids(words)
             sen_len = len(words)
             word_seq_tensor[i, :sen_len] = torch.LongTensor([indexed_tokens])
-            tag_seq_tensor[i, 1:sen_len-1] = torch.LongTensor(tags)
+            tag_seq_tensor[i, 1 : sen_len - 1] = torch.LongTensor(tags)
             word_mask_tensor[i, :sen_len] = torch.LongTensor([1] * sen_len)
-            tag_mask_tensor[i, 1:sen_len-1] = torch.LongTensor([1] * (sen_len-2))
+            tag_mask_tensor[i, 1 : sen_len - 1] = torch.LongTensor([1] * (sen_len - 2))
             for j in intents:
-                intent_tensor[i, j] = 1.
+                intent_tensor[i, j] = 1.0
             context_len = len(batch_data[i][-5])
             context_seq_tensor[i, :context_len] = torch.LongTensor([batch_data[i][-5]])
             context_mask_tensor[i, :context_len] = torch.LongTensor([1] * context_len)
 
-        return word_seq_tensor, tag_seq_tensor, intent_tensor, word_mask_tensor, tag_mask_tensor, context_seq_tensor, context_mask_tensor
+        return (
+            word_seq_tensor,
+            tag_seq_tensor,
+            intent_tensor,
+            word_mask_tensor,
+            tag_mask_tensor,
+            context_seq_tensor,
+            context_mask_tensor,
+        )
 
     def get_train_batch(self, batch_size):
-        batch_data = random.choices(self.data['train'], k=batch_size)
+        batch_data = random.choices(self.data["train"], k=batch_size)
         return self.pad_batch(batch_data)
 
     def yield_batches(self, batch_size, data_key):
         batch_num = math.ceil(len(self.data[data_key]) / batch_size)
         for i in range(batch_num):
-            batch_data = self.data[data_key][i * batch_size:(i + 1) * batch_size]
+            batch_data = self.data[data_key][i * batch_size : (i + 1) * batch_size]
             yield self.pad_batch(batch_data), batch_data, len(batch_data)

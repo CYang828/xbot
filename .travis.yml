@@ -1,0 +1,26 @@
+language: python
+python:
+  - 3.8
+#env:
+#  global:
+#  - secure: "<encrypted MYPYPI_USER=zhangchunyang_pri@126.com>"
+#  - secure: "<encrypted MYPYPI_PASS=p@ssword>"
+before_install:
+  - pip install poetry
+install:
+  - poetry install --no-root
+script:
+  - poetry run make clean
+#- make lint
+#- make tests
+#- make safety
+#before_deploy:
+#- poetry config repositories.mypypi http://mypypi.example.com/simple
+#- poetry config http-basic.mypypi $MYPYPI_USER $MYPYPI_PASS
+#- poetry build -f sdist
+#deploy:
+#  provider: script
+#  script: poetry publish -r mypypi
+#  skip_cleanup: true
+#  on:
+#    tags: true

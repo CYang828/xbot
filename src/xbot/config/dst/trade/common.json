@@ -1,0 +1,14 @@
+{
+  "unk_id": 0,
+  "pad_id": 1,
+  "eos_id": 2,
+  "sos_id": 3,
+  "hidden_size": 100,
+  "load_embedding": 0,
+  "dropout": 0.2,
+  "num_encoder_layers": 1,
+  "num_decoder_layers": 1,
+  "unk_mask": 1,
+  "parallel_decode": 1,
+  "use_imbalance_sampler": 0
+}
