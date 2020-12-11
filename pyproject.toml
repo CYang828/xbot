@@ -41,10 +41,6 @@ testpaths = ["tests"]
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
 
-[tool.coverage.report]
-show_missing = true
-fail_under = 80
-
 [tool.poetry.scripts]
 xbot = "src.xbot.cli:main"
 
