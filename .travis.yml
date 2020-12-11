@@ -1,15 +1,16 @@
 language: python
 python:
-- 3.8
+  - 3.8
 #env:
 #  global:
 #  - secure: "<encrypted MYPYPI_USER=zhangchunyang_pri@126.com>"
 #  - secure: "<encrypted MYPYPI_PASS=p@ssword>"
 before_install:
-- pip install poetry
+  - pip install poetry
 install:
-- poetry install --no-root
+  - poetry install --no-root
 script:
+  - poetry run make clean
 #- make lint
 #- make tests
 #- make safety

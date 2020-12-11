@@ -56,9 +56,9 @@ lint:
 	make lint-docstrings
 
 types:
-	pytype --disable=import-error src tests docs/conf.py
-	mypy src tests docs/conf.py
-	pytest --typeguard-packages=src
+	poetry run pytype --disable=import-error src tests docs/conf.py
+	poetry run mypy src tests docs/conf.py
+	poetry run pytest --typeguard-packages=src
 
 formatter:
 	poetry run black src/xbot tests
