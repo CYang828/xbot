@@ -11,7 +11,7 @@ jobs:
         architecture: x64
     - run: pip install poetry
     - run: poetry install --no-root
-    - run: poetry run coverage xml "--include=src/*.py,tests" --fail-under=0 --ignore-errorsls
+    - run: poetry run coverage xml "--include=src/*.py,tests" --fail-under=0 --ignore-errors
       env:
         CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
     - run: poetry run codecov
