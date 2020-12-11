@@ -8,7 +8,7 @@ python:
 before_install:
 - pip install poetry
 install:
-- poetry install
+- poetry install --no-root
 script:
 - make lint
 - make tests
