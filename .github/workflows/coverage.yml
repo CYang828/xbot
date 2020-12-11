@@ -12,6 +12,6 @@ jobs:
     - run: pip install poetry
     - run: poetry install --no-root
     - run: poetry run coverage xml --fail-under=0
-    - run: poetry run codecov
       env:
         CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+    - run: poetry run codecov
