@@ -1,4 +1,5 @@
 [![Tests](https://github.com/BSlience/xbot/workflows/Tests/badge.svg)](https://github.com/BSlience/xbot/actions?workflow=Tests)
+[![Codecov](https://codecov.io/gh/BSlience/xbot/branch/master/graph/badge.svg)](https://codecov.io/gh/BSlience/xbot)
 
 # XBot
 This is a chatbot for X.
