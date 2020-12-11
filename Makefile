@@ -50,14 +50,12 @@ install:
 	poetry install
 
 lint:
-	source ~/.bashrc
     # Ignore docstring errors when running on the entire project
 	poetry run flake8 src tests --extend-ignore D
 	poetry run black --check src tests
 	make lint-docstrings
 
 types:
-	source ~/.bashrc
 	pytype --disable=import-error src tests docs/conf.py
 	mypy src tests docs/conf.py
 	pytest --typeguard-packages=src
