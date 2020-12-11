@@ -10,9 +10,9 @@ before_install:
 install:
 - poetry install --no-root
 script:
-- make lint
-- make tests
-- make safety
+#- make lint
+#- make tests
+#- make safety
 #before_deploy:
 #- poetry config repositories.mypypi http://mypypi.example.com/simple
 #- poetry config http-basic.mypypi $MYPYPI_USER $MYPYPI_PASS

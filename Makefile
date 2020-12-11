@@ -64,7 +64,7 @@ formatter:
 	poetry run black src/xbot tests
 
 safety:
-	safety check --full-report
+	poetry run safety check --full-report
 
 install-docs:
 	cd docs/ && yarn install
@@ -77,11 +77,11 @@ lint-docstrings:
 	# Check only production code. Ignore other flake errors which are captured by `lint`
 	# Diff of committed changes (shows only changes introduced by your branch
 	ifneq ($(strip $(BRANCH)),)
-		git diff $(BRANCH)...HEAD -- rasa | poetry run flake8 --select D --diff
+		git diff $(BRANCH)...HEAD -- src | poetry run flake8 --select D --diff
 	endif
 
 	# Diff of uncommitted changes for running locally
-	git diff HEAD -- rasa | poetry run flake8 --select D --diff
+	git diff HEAD -- src | poetry run flake8 --select D --diff
 
 tests:
 	# OMP_NUM_THREADS can improve overall performance using one thread by process (on tensorflow), avoiding overload
