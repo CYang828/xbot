@@ -3,9 +3,9 @@ import json
 import random
 import numpy as np
 
-from xbot.util.path import get_root_path
-from xbot.util.download import download_from_url
-from xbot.nlu.slot.slot_with_bert import SlotWithBert
+from src.xbot.util.path import get_root_path
+from src.xbot.util.download import download_from_url
+from src.xbot.nlu.slot.slot_with_bert import SlotWithBert
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_slot_postprocess import (
     is_slot_da,
@@ -24,17 +24,18 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-if __name__ == "__main__":
+def main():
+    global scheduler
     data_urls = {
-        "slot_train_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/slot_train_data.json",
-        "slot_val_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/slot_val_data.json",
-        "slot_test_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/slot_test_data.json",
+        "slot_train_data.json": "http://xbot.bslience.cn/slot_train_data.json",
+        "slot_val_data.json": "http://xbot.bslience.cn/slot_val_data.json",
+        "slot_test_data.json": "http://xbot.bslience.cn/slot_test_data.json",
     }
 
     # load config
     root_path = get_root_path()
     config_path = os.path.join(
-        root_path, "xbot/config/crosswoz_all_context_nlu_slot.json"
+        root_path, "src/xbot/config/nlu/crosswoz_all_context_nlu_slot.json"
     )
     config = json.load(open(config_path))
     data_path = config["data_dir"]
@@ -64,12 +65,12 @@ if __name__ == "__main__":
         tag_vocab=tag_vocab,
         pretrained_weights=config["model"]["pretrained_weights"],
     )
-    for data_key in ["train", "val", "tests"]:
+    for data_key in ["train", "val", "test"]:
         dataloader.load_data(
             json.load(
                 open(
                     os.path.join(data_path, "slot_{}_data.json".format(data_key)),
-                    encoding="utf-8",
+                    encoding="utf-8"
                 )
             ),
             data_key,
@@ -176,7 +177,7 @@ if __name__ == "__main__":
             val_slot_loss = 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(
-                batch_size, data_key="val"
+                    batch_size, data_key="val"
             ):
 
                 pad_batch = tuple(t.to(device) for t in pad_batch)
@@ -254,3 +255,7 @@ if __name__ == "__main__":
 
     model_path = os.path.join(output_dir, "pytorch_model_nlu_slot.pt")
     torch.save(model.state_dict(), model_path)
+
+
+if __name__ == "__main__":
+    main()

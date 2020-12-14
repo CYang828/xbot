@@ -2,10 +2,10 @@ import os
 import json
 from typing import Any
 
-from xbot.constants import DEFAULT_MODEL_PATH
-from xbot.util.nlu_util import NLU
-from xbot.util.path import get_root_path
-from xbot.util.download import download_from_url
+from src.xbot.constants import DEFAULT_MODEL_PATH
+from src.xbot.util.nlu_util import NLU
+from src.xbot.util.path import get_root_path
+from src.xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_postprocess import recover_intent
 
@@ -179,7 +179,7 @@ class JointWithBertPredictor(NLU):
 
     default_model_config = "nlu/crosswoz_all_context_joint_nlu.json"
     default_model_name = "pytorch-joint-with-bert_policy.pt"
-    default_model_url = "http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-joint-with-bert.pt"
+    default_model_url = "http://xbot.bslience.cn/pytorch-joint-with-bert.pt"
 
     def __init__(self):
         root_path = get_root_path()

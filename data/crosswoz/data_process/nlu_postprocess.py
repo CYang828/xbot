@@ -10,7 +10,7 @@ def is_slot_da(da):
     return False
 
 
-def calculateF1(predict_golden):
+def calculate_f1(predict_golden):
     TP, FP, FN = 0, 0, 0
     for item in predict_golden:
         predicts = item["predict"]

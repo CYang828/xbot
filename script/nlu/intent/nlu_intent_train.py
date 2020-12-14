@@ -3,9 +3,9 @@ import json
 import random
 import zipfile
 
-from xbot.util.path import get_root_path, get_config_path, get_data_path
-from xbot.util.download import download_from_url
-from xbot.nlu.intent.intent_with_bert import IntentWithBert
+from src.xbot.util.path import get_root_path, get_config_path, get_data_path
+from src.xbot.util.download import download_from_url
+from src.xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import (
     calculate_f1,
@@ -23,11 +23,11 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-def train():
+def main():
     data_urls = {
-        "intent_train_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json",
-        "intent_val_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json",
-        "intent_test_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json",
+        "intent_train_data.json": "http://xbot.bslience.cn/intent_train_data.json",
+        "intent_val_data.json": "http://xbot.bslience.cn/intent_val_data.json",
+        "intent_test_data.json": "http://xbot.bslience.cn/intent_test_data.json",
     }
     # load config
     root_path = get_root_path()
@@ -35,7 +35,8 @@ def train():
         os.path.join(get_config_path(), "nlu"), "crosswoz_all_context_nlu_intent.json"
     )
     config = json.load(open(config_path))
-    data_path = os.path.join(get_data_path(), "crosswoz/nlu_intent_data/")
+    data_path = config["data_dir"]
+    data_path = os.path.join(root_path, data_path)
     output_dir = config["output_dir"]
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config["log_dir"]
@@ -61,7 +62,7 @@ def train():
     )
 
     # load data
-    for data_key in ["train", "val", "tests"]:
+    for data_key in ["train", "val", "test"]:
         dataloader.load_data(
             json.load(
                 open(
@@ -232,4 +233,4 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    main()
