@@ -23,8 +23,7 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-
-if __name__ == "__main__":
+def train():
     data_urls = {
         "joint_train_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/joint_train_data.json",
         "joint_val_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/slot_val_data.json",
@@ -189,7 +188,7 @@ if __name__ == "__main__":
             val_slot_loss, val_intent_loss = 0, 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(
-                batch_size, data_key="val"
+                    batch_size, data_key="val"
             ):
                 pad_batch = tuple(t.to(device) for t in pad_batch)
                 (
@@ -292,3 +291,7 @@ if __name__ == "__main__":
     writer.close()
     model_path = os.path.join(output_dir, "pytorch_model_nlu.pt")
     torch.save(model.state_dict(), model_path)
+
+
+if __name__ == "__main__":
+    train()

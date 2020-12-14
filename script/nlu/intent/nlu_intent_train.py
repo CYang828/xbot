@@ -23,8 +23,7 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-
-if __name__ == "__main__":
+def train():
     data_urls = {
         "intent_train_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json",
         "intent_val_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json",
@@ -166,7 +165,7 @@ if __name__ == "__main__":
             val_intent_loss = 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(
-                batch_size, data_key="val"
+                    batch_size, data_key="val"
             ):
                 pad_batch = tuple(t.to(device) for t in pad_batch)
                 word_seq_tensor, word_mask_tensor, intent_tensor = pad_batch
@@ -230,3 +229,7 @@ if __name__ == "__main__":
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:  ##存放压缩模型
         zf.write(model_path)
+
+
+if __name__ == "__main__":
+    train()
