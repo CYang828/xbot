@@ -1,0 +1,21 @@
+name: Coverage
+on: push
+  push:
+    branches:
+      - dev
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: x64
+      - run: pip install poetry
+      - run: poetry install --no-root
+      - run: poetry run pytest --cov src/
+      - run: poetry run coverage xml "--include=src/*.py,tests" --fail-under=0 --ignore-errors
+        env:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+      - run: poetry run codecov

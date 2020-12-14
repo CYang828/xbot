@@ -8,24 +8,26 @@ from transformers import BertTokenizer
 
 
 def read_zipped_json(filepath, filename):
-    archive = zipfile.ZipFile(filepath, 'r')
+    archive = zipfile.ZipFile(filepath, "r")
     return json.load(archive.open(filename))
 
 
 def preprocess(mode):
-    assert mode == 'all' or mode == 'usr' or mode == 'sys'
+    assert mode == "all" or mode == "usr" or mode == "sys"
     cur_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(cur_dir,'raw')
-    processed_data_dir = os.path.join(cur_dir,'nlu_temp_data/{}_data'.format(mode))
+    data_dir = os.path.join(cur_dir, "raw")
+    processed_data_dir = os.path.join(cur_dir, "nlu_temp_data/{}_data".format(mode))
     if not os.path.exists(processed_data_dir):
         os.makedirs(processed_data_dir)
 
-    data_key = ['train', 'val', 'test']
+    data_key = ["train", "val", "tests"]
     data = {}
     for key in data_key:
         # read crosswoz source data from json.zip
-        data[key] = read_zipped_json(os.path.join(data_dir, key + '.json.zip'), key + '.json')
-        print('load {}, size {}'.format(key, len(data[key])))
+        data[key] = read_zipped_json(
+            os.path.join(data_dir, key + ".json.zip"), key + ".json"
+        )
+        print("load {}, size {}".format(key, len(data[key])))
 
     processed_data = {}
     all_intent = []
@@ -33,44 +35,52 @@ def preprocess(mode):
     context_size = 3
     tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert_policy-wwm-ext")
 
-    # generate train, val, test dataset
+    # generate train, val, tests dataset
     for key in data_key:
         processed_data[key] = []
         for no, sess in data[key].items():
             # dialogue context
             context = []
             # each turn
-            for i, turn in enumerate(sess['messages']):
-                if mode == 'usr' and turn['role'] == 'sys':
-                    context.append(turn['content'])
+            for i, turn in enumerate(sess["messages"]):
+                if mode == "usr" and turn["role"] == "sys":
+                    context.append(turn["content"])
                     continue
-                elif mode == 'sys' and turn['role'] == 'usr':
-                    context.append(turn['content'])
+                elif mode == "sys" and turn["role"] == "usr":
+                    context.append(turn["content"])
                     continue
-                utterance = turn['content']
+                utterance = turn["content"]
                 # Notice: ## prefix, space remove
                 tokens = tokenizer.tokenize(utterance)
                 golden = []
                 span_info = []
                 intents = []
                 # dialog_act: intent, domain, slot, value
-                for intent, domain, slot, value in turn['dialog_act']:
-                    if intent in ['Inform', 'Recommend'] and '酒店设施' not in slot:
+                for intent, domain, slot, value in turn["dialog_act"]:
+                    if intent in ["Inform", "Recommend"] and "酒店设施" not in slot:
                         if value in utterance:
                             idx = utterance.index(value)
                             idx = len(tokenizer.tokenize(utterance[:idx]))
                             # span/token_v/golden
                             span_info.append(
-                                ('+'.join([intent, domain, slot]), idx, idx + len(tokenizer.tokenize(value)), value))
-                            token_v = ''.join(tokens[idx:idx + len(tokenizer.tokenize(value))])
+                                (
+                                    "+".join([intent, domain, slot]),
+                                    idx,
+                                    idx + len(tokenizer.tokenize(value)),
+                                    value,
+                                )
+                            )
+                            token_v = "".join(
+                                tokens[idx : idx + len(tokenizer.tokenize(value))]
+                            )
                             # if token_v != value:
                             #     print(slot, token_v, value)
-                            token_v = token_v.replace('##', '')
+                            token_v = token_v.replace("##", "")
                             golden.append([intent, domain, slot, token_v])
                         else:
                             golden.append([intent, domain, slot, value])
                     else:
-                        intents.append('+'.join([intent, domain, slot, value]))
+                        intents.append("+".join([intent, domain, slot, value]))
                         golden.append([intent, domain, slot, value])
 
                 # generate tags
@@ -88,27 +98,46 @@ def preprocess(mode):
                     else:
                         tags.append("O")
 
-                processed_data[key].append([tokens, tags, intents, golden, context[-context_size:]])
+                processed_data[key].append(
+                    [tokens, tags, intents, golden, context[-context_size:]]
+                )
                 all_intent += intents
                 all_tag += tags
-                context.append(turn['content'])
+                context.append(turn["content"])
 
         all_intent = [x[0] for x in dict(Counter(all_intent)).items()]
         all_tag = [x[0] for x in dict(Counter(all_tag)).items()]
-        print('loaded {}, size {}'.format(key, len(processed_data[key])))
-        json.dump(processed_data[key],
-                  open(os.path.join(processed_data_dir, '{}_data.json'.format(key)), 'w', encoding='utf-8'),
-                  indent=2, ensure_ascii=False)
+        print("loaded {}, size {}".format(key, len(processed_data[key])))
+        json.dump(
+            processed_data[key],
+            open(
+                os.path.join(processed_data_dir, "{}_data.json".format(key)),
+                "w",
+                encoding="utf-8",
+            ),
+            indent=2,
+            ensure_ascii=False,
+        )
 
-    print('sentence label num:', len(all_intent))
-    print('tag num:', len(all_tag))
+    print("sentence label num:", len(all_intent))
+    print("tag num:", len(all_tag))
     print(all_intent)
-    json.dump(all_intent, open(os.path.join(processed_data_dir, 'intent_vocab.json'), 'w', encoding='utf-8'), indent=2,
-              ensure_ascii=False)
-    json.dump(all_tag, open(os.path.join(processed_data_dir, 'tag_vocab.json'), 'w', encoding='utf-8'), indent=2,
-              ensure_ascii=False)
+    json.dump(
+        all_intent,
+        open(
+            os.path.join(processed_data_dir, "intent_vocab.json"), "w", encoding="utf-8"
+        ),
+        indent=2,
+        ensure_ascii=False,
+    )
+    json.dump(
+        all_tag,
+        open(os.path.join(processed_data_dir, "tag_vocab.json"), "w", encoding="utf-8"),
+        indent=2,
+        ensure_ascii=False,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # dialogue role: all, usr, sys
-    preprocess('all')
+    preprocess("all")

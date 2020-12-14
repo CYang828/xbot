@@ -28,7 +28,7 @@ class Dataloader:
         sample representation: [list of words, list of tags, list of intents, original dialog act]
         :param use_bert_tokenizer:
         :param cut_sen_len:
-        :param data_key: train/val/test
+        :param data_key: train/val/tests
         :param data:
         :return:
         """
@@ -48,31 +48,35 @@ class Dataloader:
             d.append(word_seq)
             d.append(self.seq_intent2id(d[1]))
             # [list of words, list of tags, list of intents, original dialog act,问句，list of words, intent id]
-            if data_key == 'train':
+            if data_key == "train":
                 for intent_id in d[-1]:
                     self.intent_weight[intent_id] += 1
-        if data_key == 'train':
-            train_size = len(self.data['train'])
+        if data_key == "train":
+            train_size = len(self.data["train"])
             for intent, intent_id in self.intent2id.items():
-                neg_pos = (train_size - self.intent_weight[intent_id]) / self.intent_weight[intent_id]
+                neg_pos = (
+                    train_size - self.intent_weight[intent_id]
+                ) / self.intent_weight[intent_id]
                 self.intent_weight[intent_id] = np.log10(neg_pos)
             self.intent_weight = torch.tensor(self.intent_weight)
-        print('max sen bert_policy len', max_sen_len)
+        print("max sen bert_policy len", max_sen_len)
         print(sorted(Counter(sen_len).items()))
 
     def bert_tokenize(self, word_seq):
         split_tokens = []
-        basic_tokens = self.tokenizer.basic_tokenizer.tokenize(' '.join(word_seq))
-        accum = ''
+        basic_tokens = self.tokenizer.basic_tokenizer.tokenize(" ".join(word_seq))
+        accum = ""
         i, j = 0, 0
         for i, token in enumerate(basic_tokens):
             if (accum + token).lower() == word_seq[j].lower():
-                accum = ''
+                accum = ""
             else:
                 accum += token
-            for sub_token in self.tokenizer.wordpiece_tokenizer.tokenize(basic_tokens[i]):
+            for sub_token in self.tokenizer.wordpiece_tokenizer.tokenize(
+                basic_tokens[i]
+            ):
                 split_tokens.append(sub_token)
-            if accum == '':
+            if accum == "":
                 j += 1
         return split_tokens
 
@@ -93,23 +97,23 @@ class Dataloader:
         for i in range(batch_size):
             words = batch_data[i][0]
             intents = batch_data[i][-1]
-            words = ['[CLS]'] + words + ['[SEP]']
+            words = ["[CLS]"] + words + ["[SEP]"]
             indexed_tokens = self.tokenizer.convert_tokens_to_ids(words)
             sen_len = len(words)
             word_seq_tensor[i, :sen_len] = torch.LongTensor([indexed_tokens])
             word_mask_tensor[i, :sen_len] = torch.LongTensor([1] * sen_len)
 
             for j in intents:
-                intent_tensor[i, j] = 1.
+                intent_tensor[i, j] = 1.0
 
         return word_seq_tensor, word_mask_tensor, intent_tensor
 
     def get_train_batch(self, batch_size):
-        batch_data = random.choices(self.data['train'], k=batch_size)
+        batch_data = random.choices(self.data["train"], k=batch_size)
         return self.pad_batch(batch_data)
 
     def yield_batches(self, batch_size, data_key):
         batch_num = math.ceil(len(self.data[data_key]) / batch_size)
         for i in range(batch_num):
-            batch_data = self.data[data_key][i * batch_size:(i + 1) * batch_size]
+            batch_data = self.data[data_key][i * batch_size : (i + 1) * batch_size]
             yield self.pad_batch(batch_data), batch_data, len(batch_data)
