@@ -1,13 +1,12 @@
-[![Tests](https://github.com/BSlience/xbot/workflows/Tests/badge.svg)](https://github.com/BSlience/xbot/actions?workflow=Tests)
-[![Codecov](https://codecov.io/gh/BSlience/xbot/branch/master/graph/badge.svg)](https://codecov.io/gh/BSlience/xbot)
-[![LICENSE](https://black.readthedocs.io/en/stable/_static/license.svg)](https://github.com/BSlience/xbot/blob/master/LICENSE)
+[![Tests](https://github.com/BSlience/src.xbot/workflows/Tests/badge.svg)](https://github.com/BSlience/src.xbot/actions?workflow=Tests)
+[![Codecov](https://codecov.io/gh/BSlience/src.xbot/branch/master/graph/badge.svg)](https://codecov.io/gh/BSlience/src.xbot)
+[![LICENSE](https://black.readthedocs.io/en/stable/_static/license.svg)](https://github.com/BSlience/src.xbot/blob/master/LICENSE)
 ![Version](https://img.shields.io/badge/Version-3.8%2B-orange)
 
 # XBot
 This is a Conversational AI for X.
 
 Our vision is to make Conversational AI for everyone in future. Welcome to join us :rocket: :rocket: 
-
 
 <img align="right" height="244" src="asset/xbot.jpg">
 
@@ -33,4 +32,3 @@ back to you about any necessary changes or questions.
 ## License
 Licensed under the Apache License, Version 2.0.
 Copyright 2020 Rasa Technologies GmbH. [Copy of the license](LICENSE).
-

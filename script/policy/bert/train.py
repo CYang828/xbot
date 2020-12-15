@@ -17,10 +17,10 @@ from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
 from transformers import BertTokenizer, BertForSequenceClassification, BertConfig
 
-from xbot.util.path import get_data_path
-from xbot.util.train_util import update_config
-from xbot.util.download import download_from_url
-from xbot.util.file_util import load_json, dump_json
+from src.xbot.util.path import get_data_path
+from src.xbot.util.train_util import update_config
+from src.xbot.util.download import download_from_url
+from src.xbot.util.file_util import load_json, dump_json
 from data.crosswoz.data_process.policy.bert_proprecess import (
     PolicyDataset,
     collate_fn,
@@ -48,7 +48,7 @@ class Trainer:
         start_time = time.time()
         self.train_dataloader = self.load_data("train")
         self.eval_dataloader = self.load_data("val")
-        self.test_dataloader = self.load_data("tests")
+        self.test_dataloader = self.load_data("test")
         elapsed_time = time.time() - start_time
         print(f"Loading data cost {elapsed_time}s ...")
 

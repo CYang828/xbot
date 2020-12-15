@@ -5,7 +5,7 @@ import zipfile
 import sys
 from collections import OrderedDict
 
-from xbot.util.path import get_data_path
+from src.xbot.util.path import get_data_path
 
 
 def read_zipped_json(filepath, filename):

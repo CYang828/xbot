@@ -6,11 +6,11 @@ import torch
 
 from transformers import BertForSequenceClassification, BertConfig, BertTokenizer
 
-from xbot.util.db_query import Database
-from xbot.util.policy_util import Policy
-from xbot.util.file_util import load_json
-from xbot.util.path import get_config_path
-from xbot.util.download import download_from_url
+from src.xbot.util.db_query import Database
+from src.xbot.util.policy_util import Policy
+from src.xbot.util.file_util import load_json
+from src.xbot.util.path import get_config_path
+from src.xbot.util.download import download_from_url
 from data.crosswoz.data_process.policy.bert_proprecess import str2id, pad
 
 
@@ -32,7 +32,7 @@ class BertPolicy(Policy):
 
         # download data
         model_dir = os.path.join(infer_config["data_path"], "trained_model")
-        # model_dir = os.path.join('/xhp/xbot/output/policy/bert', 'Epoch-19-f1-0.903')
+        # model_dir = os.path.join('/xhp/src/xbot/output/policy/bert', 'Epoch-19-f1-0.903')
         infer_config["model_dir"] = model_dir
         self.download_data(infer_config, model_dir)
         # 应该保持和训练使用的一致，否则 label 顺序不一致，TODO 训练时对 act_ontology 排序
@@ -102,7 +102,7 @@ class BertPolicy(Policy):
         """Preprocess raw dialogue data to bert inputs.
 
         Args:
-            belief_state: see `xbot/util/state.py`
+            belief_state: see `src/xbot/util/state.py`
             cur_domain: current domain
             history: dialogue history, [('usr', 'xxx'), ('sys', 'xxx'), ...]
 
@@ -191,7 +191,7 @@ class BertPolicy(Policy):
         """Forward step, get predictions.
 
         Args:
-            belief_state: see `xbot/util/state.py`
+            belief_state: see `src/xbot/util/state.py`
             cur_domain: current domain
             history: dialogue history, [('usr', 'xxx'), ('sys', 'xxx'), ...]
 
@@ -267,9 +267,9 @@ class BertPolicy(Policy):
 
 
 if __name__ == "__main__":
-    from xbot.dm.dst.rule_dst.rule import RuleDST
-    from xbot.util.path import get_data_path
-    from xbot.util.file_util import read_zipped_json
+    from src.xbot.dm.dst.rule_dst.rule import RuleDST
+    from src.xbot.util.path import get_data_path
+    from src.xbot.util.file_util import read_zipped_json
     from script.policy.rule.rule_test import eval_metrics
     from tqdm import tqdm
 

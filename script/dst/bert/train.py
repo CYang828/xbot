@@ -21,8 +21,8 @@ from transformers import BertTokenizer, BertConfig
 from transformers import BertForSequenceClassification
 
 from script.dst.bert.utils import eval_metrics, get_recall
-from xbot.util.download import download_from_url
-from xbot.util.path import get_data_path, get_root_path, get_config_path
+from src.xbot.util.download import download_from_url
+from src.xbot.util.path import get_data_path, get_root_path, get_config_path
 from data.crosswoz.data_process.dst.bert_preprocess import (
     turn2example,
     DSTDataset,
@@ -563,13 +563,13 @@ def main():
     common_config_name = "dst/bert/common.json"
 
     data_urls = {
-        "train4bert_dst.json": "http://xbot.bslience.cn/train4bert_dst.json",
-        "dev4bert_dst.json": "http://xbot.bslience.cn/dev4bert_dst.json",
-        "test4bert_dst.json": "http://xbot.bslience.cn/test4bert_dst.json",
-        "cleaned_ontology.json": "http://xbot.bslience.cn/cleaned_ontology.json",
-        "config.json": "http://xbot.bslience.cn/bert-base-chinese/config.json",
-        "pytorch_model.bin": "http://xbot.bslience.cn/bert-base-chinese/pytorch_model.bin",
-        "vocab.txt": "http://xbot.bslience.cn/bert-base-chinese/vocab.txt",
+        "train4bert_dst.json": "http://src.xbot.bslience.cn/train4bert_dst.json",
+        "dev4bert_dst.json": "http://src.xbot.bslience.cn/dev4bert_dst.json",
+        "test4bert_dst.json": "http://src.xbot.bslience.cn/test4bert_dst.json",
+        "cleaned_ontology.json": "http://src.xbot.bslience.cn/cleaned_ontology.json",
+        "config.json": "http://src.xbot.bslience.cn/bert-base-chinese/config.json",
+        "pytorch_model.bin": "http://src.xbot.bslience.cn/bert-base-chinese/pytorch_model.bin",
+        "vocab.txt": "http://src.xbot.bslience.cn/bert-base-chinese/vocab.txt",
     }
 
     # load config

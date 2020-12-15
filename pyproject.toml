@@ -5,10 +5,13 @@ description = ""
 authors = ["zhangchunyang <zhangchunyang_pri@126.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "~3.8"
 click = "^7.1.2"
-pytype = {version = "^2020.12.2", python = "3.8"}
-importlib-metadata = {version = "^3.1.1", python = "<3.8"}
+importlib-metadata = {version = "^3.1.1", python = "^3.8"}
+transitions = "^0.8.5"
+tqdm = "^4.54.1"
+torch = {version = "^1.5.1", python = "^3.8", platform = "linux"}
+pytype = "^2020.12.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
@@ -22,7 +25,7 @@ flake8-bugbear = "^20.11.1"
 flake8-import-order = "^0.18.1"
 safety = "^1.9.0"
 mypy = "^0.790"
-pytype = {version = "^2020.12.2", python = "3.8"}
+pytype = {version = "^2020.12.2", python = "~3.8"}
 typeguard = "^2.10.0"
 flake8-annotations = "^2.4.1"
 flake8-docstrings = "^1.5.0"
@@ -32,6 +35,7 @@ Sphinx = "^3.3.1"
 sphinx-autodoc-typehints = "^1.11.1"
 codecov = "^2.1.10"
 pre-commit = "^2.9.3"
+torch = {version = "^1.5.1", python = "^3.8", platform = "linux"}
 
 [tool.pytest.ini_options]
 minversion = "6.0"
