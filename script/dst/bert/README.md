@@ -16,7 +16,7 @@ the training set, which is about 500 dialogues.
 4. For the action of Request type, because it has no value, using Request to replace Slot and Slot to replace Value
 
 ## Arguments Explanation
-all training arguments are save in `xbot/config/dst/bert/train.json`
+all training arguments are save in `src/xbot/config/dst/bert/train.json`
 * random_undersampling: Whether to undersample negative samples，default: 1 (true)
 * overall_undersampling_ratio: The ratio of undersampling training set, default: 0.1
 * debug: Whether to use debug mode, In debug mode, you can quickly run a complete process, default: 0
@@ -25,7 +25,7 @@ all training arguments are save in `xbot/config/dst/bert/train.json`
 ## Example Usage
 To train a model from scratch, run following command:
 ```bash
-$ cd xbot
+$ cd src/xbot
 $ python -m script.dst.bert.train
 ```
 

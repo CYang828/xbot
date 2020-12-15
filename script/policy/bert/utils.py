@@ -5,8 +5,8 @@ from typing import Tuple, List, Dict
 
 import torch
 
-from xbot.util.path import get_data_path
-from xbot.util.file_util import read_zipped_json, dump_json, load_json
+from src.xbot.util.path import get_data_path
+from src.xbot.util.file_util import read_zipped_json, dump_json, load_json
 
 
 def load_act_ontology() -> Tuple[List[str], int]:

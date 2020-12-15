@@ -3,9 +3,9 @@ import json
 import random
 import zipfile
 
-from xbot.util.path import get_root_path, get_config_path, get_data_path
-from xbot.util.download import download_from_url
-from xbot.nlu.intent.intent_with_bert import IntentWithBert
+from src.xbot.util.path import get_root_path, get_config_path, get_data_path
+from src.xbot.util.download import download_from_url
+from src.xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import (
     calculate_f1,

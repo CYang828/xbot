@@ -1,7 +1,7 @@
 from pathlib import Path
 import zipfile
 import json
-from xbot.util.allennlp_file_utils import cached_path as allennlp_cached_path
+from src.xbot.util.allennlp_file_utils import cached_path as allennlp_cached_path
 
 
 def cached_path(file_path, cached_dir=None):

@@ -8,10 +8,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from xbot.util.dst_util import DST
-from xbot.util.state import default_state
-from xbot.util.download import download_from_url
-from xbot.util.path import get_data_path, get_config_path, get_root_path
+from src.xbot.util.dst_util import DST
+from src.xbot.util.state import default_state
+from src.xbot.util.download import download_from_url
+from src.xbot.util.path import get_data_path, get_config_path, get_root_path
 from data.crosswoz.data_process.dst.trade_preprocess import (
     get_slot_information,
     prepare_data_for_update,
@@ -542,7 +542,7 @@ if __name__ == "__main__":
     # download dials file
     if not os.path.exists(dials_path):
         download_from_url(
-            "http://qiw2jpwfc.hn-bkt.clouddn.com/dev_dials.json", dials_path
+            "http://xbot.bslience.cn/dev_dials.json", dials_path
         )
 
     with open(os.path.join(data_path, "dev_dials.json"), "r", encoding="utf8") as f:

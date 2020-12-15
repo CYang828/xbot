@@ -10,7 +10,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from xbot.dm.dst.rule_dst.rule import RuleDST
+from src.xbot.dm.dst.rule_dst.rule import RuleDST
 
 
 def set_seed(seed):

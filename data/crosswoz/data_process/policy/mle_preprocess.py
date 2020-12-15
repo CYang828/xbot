@@ -2,8 +2,8 @@ import json
 
 import numpy as np
 
-from xbot.util.db_query import Database
-from xbot.util.state import default_state
+from src.xbot.util.db_query import Database
+from src.xbot.util.state import default_state
 
 
 def delexicalize_da(da):

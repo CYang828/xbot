@@ -10,9 +10,9 @@ import torch.nn as nn
 from torch import optim
 from torch.optim import lr_scheduler
 
-from xbot.dm.dst.trade_dst.trade import Trade
-from xbot.util.download import download_from_url
-from xbot.util.path import get_root_path, get_config_path, get_data_path
+from src.xbot.dm.dst.trade_dst.trade import Trade
+from src.xbot.util.download import download_from_url
+from src.xbot.util.path import get_root_path, get_config_path, get_data_path
 from script.dst.trade.utils import (
     masked_cross_entropy_for_value,
     evaluate_metrics,
@@ -274,11 +274,11 @@ def main():
     common_config_name = "dst/trade/common.json"
 
     data_urls = {
-        "train_dials.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/train_dials.json",
-        "dev_dials.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/dev_dials.json",
-        "test_dials.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/test_dials.json",
-        "ontology.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/ontology.json",
-        "sgns.wiki.bigram.bz2": "http://qiw2jpwfc.hn-bkt.clouddn.com/sgns.wiki.bigram.bz2",
+        "train_dials.json": "http://xbot.bslience.cn/train_dials.json",
+        "dev_dials.json": "http://xbot.bslience.cn/dev_dials.json",
+        "test_dials.json": "http://xbot.bslience.cn/test_dials.json",
+        "ontology.json": "http://xbot.bslience.cn/ontology.json",
+        "sgns.wiki.bigram.bz2": "http://xbot.bslience.cn/sgns.wiki.bigram.bz2",
     }
 
     # load config

@@ -1,4 +1,4 @@
-from xbot.pipeline import Pipeline
+from src.xbot.pipeline import Pipeline
 
 
 class NLUPipeline(Pipeline):
