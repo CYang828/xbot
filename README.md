@@ -6,7 +6,7 @@
 # XBot
 This is a Conversational AI for X.
 
-Our vision is to make Conversational AI for everyone in future. Welcome to join us :rocket: :musical_note:
+Our vision is to make Conversational AI for everyone in future. Welcome to join us :rocket: :rocket: 
 
 
 <img align="right" height="244" src="asset/xbot.jpg">
