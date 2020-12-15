@@ -66,10 +66,6 @@ formatter:
 safety:
 	poetry run safety check --full-report
 
-install-docs:
-	cd docs/ && yarn install
-
-
 # Compare against `master` if no branch was provided
 BRANCH ?= master
 lint-docstrings:
@@ -92,6 +88,9 @@ docs:
 
 livedocs:
 	cd docs/ && poetry run yarn start
+
+install-docs:
+	cd docs/ && yarn install
 
 release:
 	poetry run python scripts/release.py
