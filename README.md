@@ -14,7 +14,6 @@ git clone https://github.com/BSlience/xbot.git
 ```
 
 ## How to contribute
-## How to contribute
 We are very happy to receive and merge your contributions into this repository! 
 
 To contribute via pull request, follow these steps:
