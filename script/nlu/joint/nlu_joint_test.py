@@ -4,7 +4,7 @@ import json
 import random
 import numpy as np
 
-from xbot.nlu.joint.joint_with_bert import JointWithBert
+from src.xbot.nlu.joint.joint_with_bert import JointWithBert
 from data.crosswoz.data_process.nlu_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_postprocess import (
     is_slot_da,
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     curPath = os.path.abspath(os.path.dirname(__file__))
     rootPath = os.path.dirname(os.path.dirname(os.path.dirname(curPath)))
     sys.path.append(rootPath)
-    config_path = os.path.join(rootPath, "xbot/config/{}".format(config_file))
+    config_path = os.path.join(rootPath, "src/xbot/config/{}".format(config_file))
     config = json.load(open(config_path))
     data_dir = config["data_dir"]
     output_dir = config["output_dir"]

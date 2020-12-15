@@ -3,8 +3,8 @@ from collections import Counter
 
 from pprint import pprint
 
-from xbot.util.dst_util import DST
-from xbot.util.state import default_state
+from src.xbot.util.dst_util import DST
+from src.xbot.util.state import default_state
 
 
 class RuleDST(DST):
@@ -16,7 +16,7 @@ class RuleDST(DST):
 
     def init_session(self, state=None):
         """Initialize ``self.state`` with a default state.
-        :state: see xbot.util.state.default_state
+        :state: see src.xbot.util.state.default_state
         """
         self.state = default_state() if not state else deepcopy(state)
 

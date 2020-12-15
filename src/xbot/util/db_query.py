@@ -2,7 +2,8 @@ import os
 import re
 import json
 
-from xbot.util.state import default_state
+from src.xbot.util.path import get_data_path
+from src.xbot.util.state import default_state
 
 
 def contains(arr, s):
@@ -22,10 +23,8 @@ class Database:
     def __init__(self):
         self.data = {}
         db_dir = os.path.join(
-            os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            ),
-            "data/crosswoz/database",
+            get_data_path(),
+            "crosswoz/database",
         )
         with open(os.path.join(db_dir, "metro_db.json"), "r", encoding="utf-8") as f:
             self.data["地铁"] = json.load(f)

@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 import numpy as np
 
-from xbot.util.path import get_data_path
-from xbot.util.file_util import read_zipped_json
+from src.xbot.util.path import get_data_path
+from src.xbot.util.file_util import read_zipped_json
 from data.crosswoz.data_process.dst.bert_preprocess import rank_values
 
 

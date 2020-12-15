@@ -1,7 +1,7 @@
 import random
 
-from xbot.util.policy_util import Policy
-from xbot.util.db_query import Database
+from src.xbot.util.policy_util import Policy
+from src.xbot.util.db_query import Database
 
 
 class RulePolicy(Policy):
