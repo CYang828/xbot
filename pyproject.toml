@@ -32,6 +32,7 @@ Sphinx = "^3.3.1"
 sphinx-autodoc-typehints = "^1.11.1"
 codecov = "^2.1.10"
 pre-commit = "^2.9.3"
+pydoc-markdown = "^3.8.0"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
