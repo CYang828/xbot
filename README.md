@@ -1,5 +1,5 @@
-[![Tests](https://github.com/BSlience/src.xbot/workflows/Tests/badge.svg)](https://github.com/BSlience/src.xbot/actions?workflow=Tests)
-[![Codecov](https://codecov.io/gh/BSlience/src.xbot/branch/master/graph/badge.svg)](https://codecov.io/gh/BSlience/src.xbot)
+[![Tests](https://github.com/BSlience/xbot/workflows/Tests/badge.svg)](https://github.com/BSlience/src.xbot/actions?workflow=Tests)
+[![Codecov](https://codecov.io/gh/BSlience/xbot/branch/master/graph/badge.svg)](https://codecov.io/gh/BSlience/src.xbot)
 [![LICENSE](https://black.readthedocs.io/en/stable/_static/license.svg)](https://github.com/BSlience/src.xbot/blob/master/LICENSE)
 ![Version](https://img.shields.io/badge/Version-3.8%2B-orange)
 
