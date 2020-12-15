@@ -12,7 +12,7 @@ Our vision is to make Conversational AI for everyone in future. Welcome to join 
 
 ## Quick Start
 ```
-git clone https://github.com/BSlience/src.xbot.git
+git clone https://github.com/BSlience/xbot.git
 ```
 
 ## How to contribute
