@@ -67,6 +67,8 @@ This will open a window where you can choose the repository and branch you would
 - Head repository: `your-github-username/xbot`
 - Head branch: `name-of-your-new-branch`
 
+![](asset/open-new-pr.jpg)
+
 Next, make sure to update the pull request card with as many details about your contribution as possible. _Proposed changes_ section should contain the details of what has been fixed/implemented, and Status should reflect the status of your contributions. Any reasonable change (not like a typo) should include a changelog entry, a bug fix should have a test, a new feature should have documentation, etc.
 
 If you are ready to get feedback on your contribution from the xbot team, tick the _made PR ready for code review_ and _allow edits from maintainers_ box.
