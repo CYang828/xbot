@@ -1,0 +1,120 @@
+{
+  "items": [
+    {
+      "items": [
+        "reference/xbot/model",
+        "reference/xbot/pipeline",
+        "reference/xbot/exceptions",
+        "reference/xbot/chatbot",
+        {
+          "items": [
+            "reference/xbot/nlg/nlg_with_template"
+          ],
+          "label": "xbot.nlg",
+          "type": "category"
+        },
+        {
+          "items": [
+            "reference/xbot/nlu/sequence_detect",
+            "reference/xbot/nlu/pipeline",
+            {
+              "items": [
+                "reference/xbot/nlu/intent/intent_with_bert"
+              ],
+              "label": "xbot.nlu.intent",
+              "type": "category"
+            },
+            {
+              "items": [
+                "reference/xbot/nlu/joint/joint_with_bert"
+              ],
+              "label": "xbot.nlu.joint",
+              "type": "category"
+            },
+            {
+              "items": [
+                "reference/xbot/nlu/slot/slot_with_bert"
+              ],
+              "label": "xbot.nlu.slot",
+              "type": "category"
+            }
+          ],
+          "label": "xbot.nlu",
+          "type": "category"
+        },
+        {
+          "items": [
+            "reference/xbot/util/policy_util",
+            "reference/xbot/util/allennlp_file_utils",
+            "reference/xbot/util/download",
+            "reference/xbot/util/nlg_util",
+            "reference/xbot/util/db_query",
+            "reference/xbot/util/dst_util",
+            "reference/xbot/util/module",
+            "reference/xbot/util/nlu_util"
+          ],
+          "label": "xbot.util",
+          "type": "category"
+        },
+        {
+          "items": [
+            "reference/xbot/dm/intervention",
+            {
+              "items": [
+                {
+                  "items": [
+                    "reference/xbot/dm/dst/trade_dst/trade"
+                  ],
+                  "label": "xbot.dm.dst.trade_dst",
+                  "type": "category"
+                },
+                {
+                  "items": [
+                    "reference/xbot/dm/dst/bert_dst/bert"
+                  ],
+                  "label": "xbot.dm.dst.bert_dst",
+                  "type": "category"
+                },
+                {
+                  "items": [
+                    "reference/xbot/dm/dst/rule_dst/rule"
+                  ],
+                  "label": "xbot.dm.dst.rule_dst",
+                  "type": "category"
+                }
+              ],
+              "label": "xbot.dm.dst",
+              "type": "category"
+            },
+            {
+              "items": [
+                {
+                  "items": [
+                    "reference/xbot/dm/policy/bert_policy/bert"
+                  ],
+                  "label": "xbot.dm.policy.bert_policy",
+                  "type": "category"
+                },
+                {
+                  "items": [
+                    "reference/xbot/dm/policy/mle_policy/mle"
+                  ],
+                  "label": "xbot.dm.policy.mle_policy",
+                  "type": "category"
+                }
+              ],
+              "label": "xbot.dm.policy",
+              "type": "category"
+            }
+          ],
+          "label": "xbot.dm",
+          "type": "category"
+        }
+      ],
+      "label": "xbot",
+      "type": "category"
+    }
+  ],
+  "label": "Code reference",
+  "type": "category"
+}
