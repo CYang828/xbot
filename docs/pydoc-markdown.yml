@@ -1,8 +1,8 @@
 loaders:
   - type: python
-    search_path: [../]
+    search_path: [../src]
     packages:
-    - src/xbot
+    - xbot
 processors:
   - type: filter
     skip_empty_modules: true
