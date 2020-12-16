@@ -84,7 +84,7 @@ tests:
 	OMP_NUM_THREADS=1 poetry run pytest tests --cov xbot
 
 docs:
-	cd docs/ && poetry run yarn pre-build && yarn build
+	cd docs/ && poetry run yarn build
 
 livedocs:
 	cd docs/ && poetry run yarn start
