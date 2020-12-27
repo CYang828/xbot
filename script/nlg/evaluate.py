@@ -10,7 +10,7 @@ import os
 import pickle as pkl
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 from pprint import pprint
-from xbot.nlg.nlg_with_template import TemplateNLG
+from src.xbot.nlg.nlg_with_template import TemplateNLG
 
 
 seed = 2019

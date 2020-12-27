@@ -1,0 +1,37 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "autodoc": "echo 'Generating autodoc' && pydoc-markdown",
+    "start": "docusaurus start",
+    "build": "docusaurus build --out-dir build/docs/xbot",
+    "develop": "docusaurus start --port 3000",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "serve": "docusaurus serve",
+    "clear": "docusaurus clear",
+    "serve": "netlify dev --dir=build --port=5000",
+    "deploy": "netlify deploy --dir=build --alias=staging --open"
+  },
+  "dependencies": {
+    "@docusaurus/core": "2.0.0-alpha.69",
+    "@docusaurus/preset-classic": "2.0.0-alpha.69",
+    "@mdx-js/react": "^1.6.21",
+    "clsx": "^1.1.1",
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

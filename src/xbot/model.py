@@ -1,7 +1,7 @@
 from abc import ABC
 
-from xbot.constants import DEFAULT_MODEL_PATH
-from xbot.util.download import download_from_url
+from src.xbot.constants import DEFAULT_MODEL_PATH
+from src.xbot.util.download import download_from_url
 
 import pytorch_lightning as pl
 
