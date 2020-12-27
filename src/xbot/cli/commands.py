@@ -54,6 +54,4 @@ class Runcommand(BaseXbotCLICommand):
         self.predict_parses.add_argument('--version', type=str, default='0.0.1', help='xbot version')
 
 
-a = Runcommand()
-a.parser.parse_args(['predict', '--version', '0.0.2'])
-print(a.parser.parse_args(['predict', '--version', '0.0.2']))
+
