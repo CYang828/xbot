@@ -15,6 +15,9 @@ Our vision is to make Conversational AI for everyone in future. Welcome to join 
 git clone https://github.com/BSlience/xbot.git
 ```
 
+## Where to get help
+There is extensive documentation in the [XBot Docs](http://xbot-friends.bslience.cn/).
+
 ## How to contribute
 We are very happy to receive and merge your contributions into this repository! 
 
