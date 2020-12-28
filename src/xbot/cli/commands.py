@@ -47,11 +47,3 @@ class BaseXbotCLICommand:
         for each in self.subcommand_predict.get('param'):
             self.predict_parses.add_argument(each[0], type=each[1], default=each[2], help=each[3])
 
-
-class Runcommand(BaseXbotCLICommand):
-    def __init__(self):
-        super(Runcommand, self).__init__()
-        self.predict_parses.add_argument('--version', type=str, default='0.0.1', help='xbot version')
-
-
-
