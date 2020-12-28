@@ -9,7 +9,6 @@ __pycache__/
 
 # C extensions
 *.so
-*.jsx
 
 # Distribution / packaging
 .Python
