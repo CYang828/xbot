@@ -34,6 +34,6 @@ back to you about any necessary changes or questions.
 
 ## License
 Licensed under the Apache License, Version 2.0.
-Copyright 2020 Rasa Technologies GmbH. 
+Copyright 2020 XBot Technologies GmbH. 
 
 [Copy of the license](LICENSE).
