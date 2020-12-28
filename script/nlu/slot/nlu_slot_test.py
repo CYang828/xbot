@@ -10,8 +10,8 @@ import json
 import random
 import numpy as np
 
-from src.xbot.util.path import get_root_path
-from src.xbot.nlu.slot.slot_with_bert import SlotWithBert
+from xbot.util.path import get_root_path
+from xbot.nlu.slot.slot_with_bert import SlotWithBert
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_slot_postprocess import (
     is_slot_da,

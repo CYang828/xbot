@@ -10,9 +10,9 @@ import torch.nn as nn
 from torch import optim
 from torch.optim import lr_scheduler
 
-from src.xbot.dm.dst.trade_dst.trade import Trade
-from src.xbot.util.download import download_from_url
-from src.xbot.util.path import get_root_path, get_config_path, get_data_path
+from xbot.dm.dst.trade_dst.trade import Trade
+from xbot.util.download import download_from_url
+from xbot.util.path import get_root_path, get_config_path, get_data_path
 from script.dst.trade.utils import (
     masked_cross_entropy_for_value,
     evaluate_metrics,

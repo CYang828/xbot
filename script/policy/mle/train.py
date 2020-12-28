@@ -6,10 +6,10 @@ from copy import deepcopy
 import torch
 import torch.nn as nn
 
-from src.xbot.util.download import download_from_url
-from src.xbot.dm.policy.mle_policy.mle import MultiDiscretePolicy
+from xbot.util.download import download_from_url
+from xbot.dm.policy.mle_policy.mle import MultiDiscretePolicy
 from script.policy.mle.utils import DataPreprocessor, f1, set_seed
-from src.xbot.util.path import get_data_path, get_root_path, get_config_path
+from xbot.util.path import get_data_path, get_root_path, get_config_path
 from data.crosswoz.data_process.policy.mle_preprocess import CrossWozVector
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"

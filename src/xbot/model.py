@@ -1,7 +1,7 @@
 from abc import ABC
 
-from src.xbot.constants import DEFAULT_MODEL_PATH
-from src.xbot.util.download import download_from_url
+from xbot.constants import DEFAULT_MODEL_PATH
+from xbot.util.download import download_from_url
 
 
 class Model(ABC):

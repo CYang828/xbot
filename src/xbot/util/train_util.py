@@ -4,7 +4,7 @@ import time
 import logging
 import torch
 
-from src.xbot.util.path import get_root_path, get_config_path, get_data_path
+from xbot.util.path import get_root_path, get_config_path, get_data_path
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
