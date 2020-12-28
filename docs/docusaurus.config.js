@@ -77,7 +77,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. `,
+      copyright: `Copyright © ${new Date().getFullYear()} XBot Project, Inc. `,
     },
   },
   presets: [

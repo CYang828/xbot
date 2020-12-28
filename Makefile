@@ -1,4 +1,4 @@
-.PHONY: clean test lint init docs
+.PHONY: clean tests lint init docs
 
 JOBS ?= 1
 

@@ -3,10 +3,8 @@ from abc import ABC
 from src.xbot.constants import DEFAULT_MODEL_PATH
 from src.xbot.util.download import download_from_url
 
-import pytorch_lightning as pl
 
-
-class Model(pl.LightningDataModule, ABC):
+class Model(ABC):
     """XBot Model"""
 
     def __init__(self):
