@@ -1,10 +1,10 @@
 import os
 import json
 
-from src.xbot.util.path import get_data_path
-from src.xbot.util.file_util import dump_json
-from src.xbot.dm.dst.rule_dst.rule import RuleDST
-from src.xbot.dm.policy.rule_policy.rule import RulePolicy
+from xbot.util.path import get_data_path
+from xbot.util.file_util import dump_json
+from xbot.dm.dst.rule_dst.rule import RuleDST
+from xbot.dm.policy.rule_policy.rule import RulePolicy
 
 
 def eval_metrics(gold_pred_sys_das):

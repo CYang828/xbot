@@ -17,10 +17,10 @@ from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
 from transformers import BertTokenizer, BertForSequenceClassification, BertConfig
 
-from src.xbot.util.path import get_data_path
-from src.xbot.util.train_util import update_config
-from src.xbot.util.download import download_from_url
-from src.xbot.util.file_util import load_json, dump_json
+from xbot.util.path import get_data_path
+from xbot.util.train_util import update_config
+from xbot.util.download import download_from_url
+from xbot.util.file_util import load_json, dump_json
 from data.crosswoz.data_process.policy.bert_proprecess import (
     PolicyDataset,
     collate_fn,

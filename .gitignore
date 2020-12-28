@@ -144,8 +144,8 @@ events*
 *.pt
 .nox/*
 .pytype/
-src/src.xbot/data/all_data/
-src/src.xbot/nlu/intent/~/.src.xbot-model/pytorch-intent-with-bert.bin
-src/src.xbot/nlu/intent/~/.src.xbot/
+src/xbot/data/all_data/
+src/xbot/nlu/intent/~/.xbot-model/pytorch-intent-with-bert.bin
+src/xbot/nlu/intent/~/.xbot/
 .pytype/*
 log/all_context/*

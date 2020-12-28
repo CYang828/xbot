@@ -6,11 +6,11 @@ import torch
 
 from transformers import BertForSequenceClassification, BertConfig, BertTokenizer
 
-from src.xbot.util.db_query import Database
-from src.xbot.util.policy_util import Policy
-from src.xbot.util.file_util import load_json
-from src.xbot.util.path import get_config_path
-from src.xbot.util.download import download_from_url
+from xbot.util.db_query import Database
+from xbot.util.policy_util import Policy
+from xbot.util.file_util import load_json
+from xbot.util.path import get_config_path
+from xbot.util.download import download_from_url
 from data.crosswoz.data_process.policy.bert_proprecess import str2id, pad
 
 
@@ -267,9 +267,9 @@ class BertPolicy(Policy):
 
 
 if __name__ == "__main__":
-    from src.xbot.dm.dst.rule_dst.rule import RuleDST
-    from src.xbot.util.path import get_data_path
-    from src.xbot.util.file_util import read_zipped_json
+    from xbot.dm.dst.rule_dst.rule import RuleDST
+    from xbot.util.path import get_data_path
+    from xbot.util.file_util import read_zipped_json
     from script.policy.rule.rule_test import eval_metrics
     from tqdm import tqdm
 

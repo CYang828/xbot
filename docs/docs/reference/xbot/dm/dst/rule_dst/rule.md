@@ -18,7 +18,7 @@ Rule based DST which trivially updates new values from NLU result to states.
 ```
 
 Initialize ``self.state`` with a default state.
-:state: see src.xbot.util.state.default_state
+:state: see xbot.util.state.default_state
 
 #### update
 

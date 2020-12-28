@@ -4,9 +4,9 @@ import json
 import torch
 import torch.nn as nn
 
-from src.xbot.util.policy_util import Policy
-from src.xbot.util.download import download_from_url
-from src.xbot.util.path import get_config_path, get_data_path
+from xbot.util.policy_util import Policy
+from xbot.util.download import download_from_url
+from xbot.util.path import get_config_path, get_data_path
 from data.crosswoz.data_process.policy.mle_preprocess import CrossWozVector
 
 

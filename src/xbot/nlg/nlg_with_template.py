@@ -7,8 +7,8 @@ import copy
 from collections import defaultdict
 import zipfile
 
-from src.xbot.util.nlg_util import NLG
-from src.xbot.util.download import download_from_url
+from xbot.util.nlg_util import NLG
+from xbot.util.download import download_from_url
 
 
 def read_json(filename):

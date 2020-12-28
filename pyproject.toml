@@ -46,7 +46,7 @@ testpaths = ["tests"]
 source = ["src", "*/site-packages"]
 
 [tool.poetry.scripts]
-xbot = "src.xbot.cli:main"
+xbot = "xbot.cli:main"
 
 [build-system]
 build-backend = "setuptools.build_meta"

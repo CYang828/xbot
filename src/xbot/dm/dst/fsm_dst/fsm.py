@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from transitions import Machine
 
-from src.xbot.util.dst_util import DST
-from src.xbot.util.state import default_state
+from xbot.util.dst_util import DST
+from xbot.util.state import default_state
 
 
 class FSMDST(DST):
@@ -37,7 +37,7 @@ class FSMDST(DST):
         """Initialize ``self.state`` with a default state.
 
         Args:
-            state: see src.xbot.util.state.default_state
+            state: see xbot.util.state.default_state
         """
         self.dialogue_state = default_state() if not state else deepcopy(state)
 

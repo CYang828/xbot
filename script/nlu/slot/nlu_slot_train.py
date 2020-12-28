@@ -3,9 +3,9 @@ import json
 import random
 import numpy as np
 
-from src.xbot.util.path import get_root_path
-from src.xbot.util.download import download_from_url
-from src.xbot.nlu.slot.slot_with_bert import SlotWithBert
+from xbot.util.path import get_root_path
+from xbot.util.download import download_from_url
+from xbot.nlu.slot.slot_with_bert import SlotWithBert
 from data.crosswoz.data_process.nlu_slot_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_slot_postprocess import (
     is_slot_da,
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # load config
     root_path = get_root_path()
     config_path = os.path.join(
-        root_path, "src.xbot/config/crosswoz_all_context_nlu_slot.json"
+        root_path, "xbot/config/crosswoz_all_context_nlu_slot.json"
     )
     config = json.load(open(config_path))
     data_path = config["data_dir"]

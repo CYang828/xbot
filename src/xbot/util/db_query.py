@@ -2,8 +2,8 @@ import os
 import re
 import json
 
-from src.xbot.util.path import get_data_path
-from src.xbot.util.state import default_state
+from xbot.util.path import get_data_path
+from xbot.util.state import default_state
 
 
 def contains(arr, s):

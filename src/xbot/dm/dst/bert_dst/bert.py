@@ -10,10 +10,10 @@ from torch.utils.data import DataLoader
 
 from transformers import BertForSequenceClassification, BertTokenizer
 
-from src.xbot.util.dst_util import DST
-from src.xbot.util.state import default_state
-from src.xbot.util.download import download_from_url
-from src.xbot.util.path import get_data_path, get_root_path, get_config_path
+from xbot.util.dst_util import DST
+from xbot.util.state import default_state
+from xbot.util.download import download_from_url
+from xbot.util.path import get_data_path, get_root_path, get_config_path
 from data.crosswoz.data_process.dst.bert_preprocess import (
     turn2example,
     DSTDataset,

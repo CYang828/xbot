@@ -1,7 +1,7 @@
 import click.testing
 import pytest
 
-from src.xbot import cli
+from xbot import cli
 
 
 @pytest.fixture

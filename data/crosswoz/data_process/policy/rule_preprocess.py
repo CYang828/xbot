@@ -2,8 +2,8 @@ import os
 
 from tqdm import tqdm
 
-from src.xbot.util.path import get_data_path
-from src.xbot.util.file_util import read_zipped_json, dump_json
+from xbot.util.path import get_data_path
+from xbot.util.file_util import read_zipped_json, dump_json
 
 
 def get_single_domain_examples(input_file_path, output_file_path):
