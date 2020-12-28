@@ -15,5 +15,5 @@ jobs:
         python-version: ${{ matrix.python-version }}
         architecture: x64
     - run: pip install poetry
-    - run: poetry install --no-root
+    - run: poetry install
     - run: poetry run make tests
