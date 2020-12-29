@@ -1,6 +1,4 @@
 from src.xbot.cli.commands import BaseXbotCLICommand
-import pytest
-
 
 class MyTestCase(BaseXbotCLICommand):
     def __init__(self):
