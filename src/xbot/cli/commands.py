@@ -41,6 +41,7 @@ class BaseXbotCLICommand:
         self.subcommand_train = self.command_dict.get('train')
         for each in self.subcommand_train.get('param'):
             self.train_parser.add_argument(each[0], type=each[1], default=each[2], help=each[3])
+
         self.predict_parses = self.commands_parser.add_parser("predict", help="xbot tool to predict a model on a task.")
         self.predict_parses.set_defaults()
         self.subcommand_predict = self.command_dict.get('predict')
