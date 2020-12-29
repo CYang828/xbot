@@ -4,11 +4,11 @@ import json
 import random
 import numpy as np
 
-from xbot.nlu.joint.joint_with_bert import JointWithBert
+from src.xbot.nlu.joint.joint_with_bert import JointWithBert
 from data.crosswoz.data_process.nlu_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_postprocess import (
     is_slot_da,
-    calculateF1,
+    calculate_f1,
     recover_intent,
 )
 
