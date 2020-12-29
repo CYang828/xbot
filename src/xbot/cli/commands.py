@@ -6,7 +6,6 @@
 
 import argparse
 
-
 class BaseXbotCLICommand:
     def __init__(self):
         self.command_dict = {'train': {'param': [["--data_dir", str, True, "path to dataset."],
