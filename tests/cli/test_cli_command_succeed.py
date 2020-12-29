@@ -1,9 +1,11 @@
 from src.xbot.cli.commands import BaseXbotCLICommand
 
+
 class MyTestCase(BaseXbotCLICommand):
     def __init__(self):
         super().__init__()
         self.predict_parses.add_argument('--version', type=str, default='0.0.1', help='xbot version')
+
 
 def test_main_succeeds():
     subcommand = MyTestCase()
