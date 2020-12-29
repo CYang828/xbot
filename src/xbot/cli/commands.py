@@ -46,6 +46,7 @@ class BaseXbotCLICommand:
         self.predict_parses.set_defaults()
         self.subcommand_predict = self.command_dict.get('predict')
 
+
         for each in self.subcommand_predict.get('param'):
             self.predict_parses.add_argument(each[0], type=each[1], default=each[2], help=each[3])
 
