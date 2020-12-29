@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
     config = json.load(open(config_path))
     data_path = config["data_dir"]
-    data_path = os.path.join(root_path, data_path)
+    data_path = os.patgith.join(root_path, data_path)
     output_dir = config["output_dir"]
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config["log_dir"]
