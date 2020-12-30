@@ -87,9 +87,7 @@ class BaseComponent(object):
         # this is important for e.g. persistence
         component_config["name"] = self.name
 
-        self.component_config = override_defaults(
-            self.defaults, component_config
-        )
+        self.component_config = override_defaults(self.defaults, component_config)
 
         self.partial_processing_pipeline = None
         self.partial_processing_context = None
@@ -106,15 +104,13 @@ class BaseComponent(object):
         return type(self).name
 
     @classmethod
-    def from_config(cls,
-                    component_config:
-                    Dict[Text, Any],
-                    config: "PipelineConfig"
+    def from_config(
+        cls, component_config: Dict[Text, Any], config: "PipelineConfig"
     ) -> Optional["BaseComponent"]:
         """Resolves a component and calls it's create method.
 
-            Inits it based on a previously persisted model.
-            """
+        Inits it based on a previously persisted model.
+        """
 
         # try to get class name first, else create by name
         component_name = component_config.get("class", component_config["name"])

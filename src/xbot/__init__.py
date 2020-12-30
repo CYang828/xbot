@@ -19,7 +19,7 @@ class XBot(object):
 
     def __init__(
         self,
-        name: Text = 'XBot',
+        name: Text = "XBot",
         config_path: Path = "config.yml",
         model_dir: Path = "model/",
         data_dir: Path = "data/",
