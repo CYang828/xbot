@@ -2,10 +2,10 @@ import os
 import json
 from typing import Any
 
-from xbot.util.nlu_util import NLU
-from xbot.constants import DEFAULT_MODEL_PATH
-from xbot.util.path import get_root_path, get_config_path, get_data_path
-from xbot.util.download import download_from_url
+from src.xbot.util.nlu_util import NLU
+from src.xbot.constants import DEFAULT_MODEL_PATH
+from src.xbot.util.path import get_root_path, get_config_path, get_data_path
+from src.xbot.util.download import download_from_url
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
 
@@ -98,7 +98,7 @@ class IntentWithBertPredictor(NLU):
     default_model_config = "nlu/crosswoz_all_context_nlu_intent.json"
     default_model_name = "pytorch-intent-with-bert_policy.pt"
     default_model_url = (
-        "http://qiw2jpwfc.hn-bkt.clouddn.com/pytorch-intent-with-bert.pt"
+        "http://xbot.bslience.cn//pytorch-intent-with-bert.pt"
     )
 
     def __init__(self):

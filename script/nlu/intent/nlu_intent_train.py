@@ -3,9 +3,9 @@ import json
 import random
 import zipfile
 
-from xbot.util.path import get_root_path, get_config_path, get_data_path
-from xbot.util.download import download_from_url
-from xbot.nlu.intent.intent_with_bert import IntentWithBert
+from src.xbot.util.path import get_root_path, get_config_path, get_data_path
+from src.xbot.util.download import download_from_url
+from src.xbot.nlu.intent.intent_with_bert import IntentWithBert
 from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_intent_postprocess import (
     calculate_f1,
@@ -23,12 +23,11 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-
-if __name__ == "__main__":
+def main():
     data_urls = {
-        "intent_train_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_train_data.json",
-        "intent_val_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_val_data.json",
-        "intent_test_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/intent_test_data.json",
+        "intent_train_data.json": "http://xbot.bslience.cn/intent_train_data.json",
+        "intent_val_data.json": "http://xbot.bslience.cn/intent_val_data.json",
+        "intent_test_data.json": "http://xbot.bslience.cn/intent_test_data.json",
     }
     # load config
     root_path = get_root_path()
@@ -36,7 +35,8 @@ if __name__ == "__main__":
         os.path.join(get_config_path(), "nlu"), "crosswoz_all_context_nlu_intent.json"
     )
     config = json.load(open(config_path))
-    data_path = os.path.join(get_data_path(), "crosswoz/nlu_intent_data/")
+    data_path = config["data_dir"]
+    data_path = os.path.join(root_path, data_path)
     output_dir = config["output_dir"]
     output_dir = os.path.join(root_path, output_dir)
     log_dir = config["log_dir"]
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     )
 
     # load data
-    for data_key in ["train", "val", "tests"]:
+    for data_key in ["train", "val", "test"]:
         dataloader.load_data(
             json.load(
                 open(
@@ -166,7 +166,7 @@ if __name__ == "__main__":
             val_intent_loss = 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(
-                batch_size, data_key="val"
+                    batch_size, data_key="val"
             ):
                 pad_batch = tuple(t.to(device) for t in pad_batch)
                 word_seq_tensor, word_mask_tensor, intent_tensor = pad_batch
@@ -230,3 +230,7 @@ if __name__ == "__main__":
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:  ##存放压缩模型
         zf.write(model_path)
+
+
+if __name__ == "__main__":
+    main()
