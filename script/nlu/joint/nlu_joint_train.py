@@ -3,13 +3,13 @@ import json
 import random
 import numpy as np
 
-from xbot.util.path import get_root_path
-from xbot.util.download import download_from_url
-from xbot.nlu.joint.joint_with_bert import JointWithBert
+from src.xbot.util.path import get_root_path
+from src.xbot.util.download import download_from_url
+from src.xbot.nlu.joint.joint_with_bert import JointWithBert
 from data.crosswoz.data_process.nlu_dataloader import Dataloader
 from data.crosswoz.data_process.nlu_postprocess import (
     is_slot_da,
-    calculateF1,
+    calculate_f1,
     recover_intent,
 )
 
@@ -23,18 +23,17 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-
-if __name__ == "__main__":
+def main():
     data_urls = {
-        "joint_train_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/joint_train_data.json",
-        "joint_val_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/slot_val_data.json",
-        "joint_test_data.json": "http://qiw2jpwfc.hn-bkt.clouddn.com/joint_test_data.json",
+        "joint_train_data.json": "http://xbot.bslience.cn/joint_train_data.json",
+        "joint_val_data.json": "http://xbot.bslience.cn/joint_val_data.json",
+        "joint_test_data.json": "http://xbot.bslience.cn/joint_test_data.json",
     }
 
     # load config
     root_path = get_root_path()
     config_path = os.path.join(
-        root_path, "src/xbot/config/crosswoz_all_context_nlu_slot.json"
+        root_path, "src/xbot/config/nlu/crosswoz_all_context_joint_nlu.json"
     )
     config = json.load(open(config_path))
     data_path = config["data_dir"]
@@ -55,8 +54,12 @@ if __name__ == "__main__":
 
     # 经过preprocess处理之后，会产生intent_vocab，tag_vocab，train_data,test_data,val_data,数据集
     # 导入intent_vocab，tag_vocab数据集
-    intent_vocab = json.load(open(os.path.join(root_path, "intent_vocab.json")))
-    tag_vocab = json.load(open(os.path.join(root_path, "tag_vocab.json")))
+    intent_vocab = json.load(
+        open(os.path.join(data_path, "intent_vocab.json"), encoding="utf-8")
+    )
+    tag_vocab = json.load(
+        open(os.path.join(data_path, "tag_vocab.json"), encoding="utf-8")
+    )
 
     dataloader = Dataloader(
         intent_vocab=intent_vocab,
@@ -65,9 +68,14 @@ if __name__ == "__main__":
     )
 
     # 导入train_data,val_data,test_data数据集
-    for data_key in ["train", "val", "tests"]:
+    for data_key in ["train", "val", "test"]:
         dataloader.load_data(
-            json.load(open(os.path.join(root_path, "{}_data.json".format(data_key)))),
+            json.load(
+                open(
+                    os.path.join(data_path, "joint_{}_data.json".format(data_key)),
+                    encoding="utf-8"
+                )
+            ),
             data_key,
             cut_sen_len=config["cut_sen_len"],
             use_bert_tokenizer=config["use_bert_tokenizer"],
@@ -189,7 +197,7 @@ if __name__ == "__main__":
             val_slot_loss, val_intent_loss = 0, 0
             model.eval()
             for pad_batch, ori_batch, real_batch_size in dataloader.yield_batches(
-                batch_size, data_key="val"
+                    batch_size, data_key="val"
             ):
                 pad_batch = tuple(t.to(device) for t in pad_batch)
                 (
@@ -292,3 +300,7 @@ if __name__ == "__main__":
     writer.close()
     model_path = os.path.join(output_dir, "pytorch_model_nlu.pt")
     torch.save(model.state_dict(), model_path)
+
+
+if __name__ == "__main__":
+    main()
