@@ -5,4 +5,5 @@ class NLUComponent(BaseComponent):
     """
     NLU Component
     """
+
     pass

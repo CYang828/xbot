@@ -1,0 +1,2 @@
+class TrainingData(object):
+    pass

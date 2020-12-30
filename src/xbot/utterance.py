@@ -1,0 +1,2 @@
+class Utterance(object):
+    pass

@@ -23,7 +23,7 @@ class CNEmbedding:
         with bz2.open(vector_path, "rt", encoding="utf8") as fin:
             lines = fin.readlines()
             # 第一行是元信息
-            for line in tqdm(lines[1:], desc="Generating pretrained embedding"):
+            for line in tqdm(lines[1:], desc="Generating pretrained embeddings"):
                 line = line.strip()
                 tokens = line.split()
                 word = tokens[0]
@@ -60,13 +60,13 @@ def dump_pretrained_emb(orig_embedding_path, index2word, dump_path):
         # stat embed existence
         count[1] += 1.0  # 总词数
         if w in embeddings[0].word2vec:
-            count[0] += 1.0  # 存在于 embedding 中的词数
+            count[0] += 1.0  # 存在于 embeddings 中的词数
         # e += [0.] * 300
         embedding.append(e)
 
     with open(dump_path, "w") as f:
         json.dump(embedding, f)
-    print(f"Word exists in embedding mat: {count[0] / count[1] * 100}")
+    print(f"Word exists in embeddings mat: {count[0] / count[1] * 100}")
 
 
 def fix_general_label_error(belief_state):

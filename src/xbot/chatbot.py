@@ -1,7 +1,7 @@
-from .exceptions import XBotException
+from .exceptions import XBotBaseException
 
 
-class ChatbotException(XBotException):
+class ChatbotBaseException(XBotBaseException):
     pass
 
 
