@@ -7,6 +7,7 @@ def get_root_path():
     # return os.path.join(root_path, "xbot")
     return root_path
 
+
 def get_config_path():
     config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../config"))
     return config_path
