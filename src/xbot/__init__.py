@@ -3,6 +3,7 @@ from typing import Text
 from importlib.metadata import version, PackageNotFoundError
 
 from .builder import Builder
+from .cli.commands import BaseXbotCliCommand
 
 
 try:
@@ -14,7 +15,7 @@ except PackageNotFoundError:  # pragma: no cover
 __all__ = ["XBot"]
 
 
-class XBot(object):
+class XBot(BaseXbotCliCommand):
     """Converstaional AI XBot object"""
 
     def __init__(
@@ -30,6 +31,7 @@ class XBot(object):
         self.interpreter = None
         self.trainer = None
         self.builder = Builder(config_path, model_dir, data_dir)
+        self.command_dict = {}
 
     def __str__(self):
         return f"<XBot {self.name}>"
