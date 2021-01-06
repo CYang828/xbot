@@ -29,7 +29,7 @@ Before you make any changes to your cloned repository, make sure you have the la
 ```
 cd xbot
 git remote add upstream https://github.com/BSlience/xbot.git
-git pull upstream master
+git pull upstream dev
 ```
 
 This will update the local copy of the xbot repository to the latest version.
@@ -63,7 +63,7 @@ Head to the forked repository and click on a _Compare & pull_ request button.
 This will open a window where you can choose the repository and branch you would like to propose your changes to, as well as specific details of your contribution. In the top panel menu choose the following details:
 
 - Base repository: `BSlience/xbot`
-- Base branch: `master`
+- Base branch: `dev`
 - Head repository: `your-github-username/xbot`
 - Head branch: `name-of-your-new-branch`
 
@@ -77,7 +77,7 @@ Once you are happy with everything, click the _Create pull request_ button. This
 
 #### 7. Merging your PR and the final steps of your contribution
 
-Once you sign the CLA, a member from the xbot team will get in touch with you with the feedback on your contribution. In some cases, contributions are accepted right away, but often, you may be asked to make some edits/improvements. Don’t worry if you are asked to change something - it’s a completely normal part of software development.
+After you create a Pull Request, a member from the xbot team will get in touch with you with the feedback on your contribution. In some cases, contributions are accepted right away, but often, you may be asked to make some edits/improvements. Don’t worry if you are asked to change something - it’s a completely normal part of software development.
 
 If you have been requested to make changes to your contribution, head back to the local copy of your repository on your machine, implement the changes and push them to your contribution branch by repeating instructions from step 5. Your pull request will automatically be updated with the changes you pushed. Once you've implemented all of the suggested changes, tag the person who first reviewed your contribution by mentioning them in the comments of your PR to ask them to take another look.
 Finally, if your contribution is accepted, the xbot team member will merge it to the xbot codebase.

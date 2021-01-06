@@ -97,9 +97,7 @@ class IntentWithBertPredictor(NLU):
 
     default_model_config = "nlu/crosswoz_all_context_nlu_intent.json"
     default_model_name = "pytorch-intent-with-bert_policy.pt"
-    default_model_url = (
-        "http://xbot.bslience.cn//pytorch-intent-with-bert.pt"
-    )
+    default_model_url = "http://xbot.bslience.cn//pytorch-intent-with-bert.pt"
 
     def __init__(self):
         # path
