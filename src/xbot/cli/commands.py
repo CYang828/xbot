@@ -34,20 +34,15 @@ class BaseXbotCliCommand:
 
     def __init__(self, command_dict):
         self.command_dict = command_dict
-        self.parser = argparse.ArgumentParser(
-            "Xbot CLI tool", usage="xbot cli <command> [<args>]"
-        )
-        self.commands_parser = self.parser.add_subparsers(
-            help="xbot-cli command helpers"
-        )
+        self.parser = argparse.ArgumentParser("Xbot CLI tool", usage="xbot cli <command> [<args>]")
+        self.commands_parser = self.parser.add_subparsers(help="xbot-cli command helpers")
 
         for key in self.command_dict.keys():
-            self.sub_parser = self.commands_parser.add_parser(
-                key, help="xbot tool to {} a model on a task.".format(key)
-            )
+            self.sub_parser = self.commands_parser.add_parser(key,
+                                                              help="xbot tool to {} a model on a task.".format(key))
             self.sub_parser.set_defaults()
             self.subcommand_key = self.command_dict.get(key)
-            for each in self.subcommand_key.get("param"):
-                self.sub_parser.add_argument(
-                    each[0], type=each[1], default=each[2], help=each[3]
-                )
+            for each in self.subcommand_key.get('param'):
+                self.sub_parser.add_argument(each[0], type=each[1], default=each[2], help=each[3])
+
+
