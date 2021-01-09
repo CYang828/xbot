@@ -1,3 +1,5 @@
+[中文](CONTRIBUTING.zh-CN.md)
+
 ## How to open a PR and contribute code to xbot Open Source
 
 #### 1. Forking the xbot Repository
