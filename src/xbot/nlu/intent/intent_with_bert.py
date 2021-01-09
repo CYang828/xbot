@@ -2,12 +2,12 @@ import os
 import json
 from typing import Any
 
-from src.xbot.util.nlu_util import NLU
-from src.xbot.constants import DEFAULT_MODEL_PATH
+from xbot.util.nlu_util import NLU
+from xbot.constants import DEFAULT_MODEL_PATH
 from src.xbot.util.path import get_root_path, get_config_path, get_data_path
 from src.xbot.util.download import download_from_url
-from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from data.crosswoz.data_process.nlu_intent_postprocess import recover_intent
+from data.crosswoz.data_process.nlu.nlu_intent_dataloader import Dataloader
+from data.crosswoz.data_process.nlu.nlu_intent_postprocess import recover_intent
 
 import torch
 from torch import nn
