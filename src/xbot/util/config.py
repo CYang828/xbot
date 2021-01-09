@@ -1,12 +1,14 @@
 import re
 import os
+import copy
 from io import StringIO
 from pathlib import Path
 from collections import OrderedDict
-from typing import Any, Dict, List, Text, Union
+from typing import Any, Dict, List, Text, Union, Optional
 
 from .io import DEFAULT_ENCODING
-from ..exceptions import (FileNotFoundException, FileIOException, YamlSyntaxException)
+from ..exceptions import XBotConfigException
+from .io import FileIOBaseException, FileNotFoundException
 
 
 from ruamel import yaml as yaml
@@ -15,6 +17,52 @@ from ruamel.yaml.constructor import DuplicateKeyError
 
 
 YAML_VERSION = (1, 2)
+
+
+class YamlBaseException(XBotConfigException):
+    """Raised if there is an error reading yaml."""
+
+    def __init__(self, filename: Optional[Text] = None) -> None:
+        """Create exception.
+
+        Args:
+            filename: optional file the error occurred in"""
+        self.filename = filename
+
+
+class YamlSyntaxException(YamlBaseException):
+    """Raised when a YAML file can not be parsed properly due to a syntax error."""
+
+    def __init__(
+        self,
+        filename: Optional[Text] = None,
+        underlying_yaml_exception: Optional[Exception] = None,
+    ) -> None:
+        super(YamlSyntaxException, self).__init__(filename)
+
+        self.underlying_yaml_exception = underlying_yaml_exception
+
+    def __str__(self) -> Text:
+        if self.filename:
+            exception_text = f"Failed to read '{self.filename}'."
+        else:
+            exception_text = "Failed to read YAML."
+
+        if self.underlying_yaml_exception:
+            self.underlying_yaml_exception.warn = None
+            self.underlying_yaml_exception.note = None
+            exception_text += f" {self.underlying_yaml_exception}"
+
+        if self.filename:
+            exception_text = exception_text.replace(
+                'in "<unicode string>"', f'in "{self.filename}"'
+            )
+
+        exception_text += (
+            "\n\nYou can use https://yamlchecker.com/ to validate the "
+            "YAML syntax of your file."
+        )
+        return exception_text
 
 
 def read_file(filename: Union[Text, Path], encoding: Text = DEFAULT_ENCODING) -> Any:
@@ -28,7 +76,7 @@ def read_file(filename: Union[Text, Path], encoding: Text = DEFAULT_ENCODING) ->
             f"Failed to read file, " f"'{os.path.abspath(filename)}' does not exist."
         )
     except UnicodeDecodeError:
-        raise FileIOException(
+        raise FileIOBaseException(
             f"Failed to read file '{os.path.abspath(filename)}', "
             f"could not read the file using {encoding} to decode "
             f"it. Please make sure the file is stored with this "
@@ -236,3 +284,32 @@ def read_config_file(filename: Union[Path, Text]) -> Dict[Text, Any]:
                 f"Expected a key value mapping but found a {type(content).__name__}"
             ),
         )
+
+
+def override_defaults(
+    defaults: Optional[Dict[Text, Any]], custom: Optional[Dict[Text, Any]]
+) -> Dict[Text, Any]:
+    """Override default config with the given config.
+
+    We cannot use `dict.update` method because configs contain nested dicts.
+
+    Args:
+        defaults: default config
+        custom: user config containing new parameters
+
+    Returns:
+        updated config
+    """
+    if defaults:
+        config = copy.deepcopy(defaults)
+    else:
+        config = {}
+
+    if custom:
+        for key in custom.keys():
+            if isinstance(config.get(key), dict):
+                config[key].update(custom[key])
+            else:
+                config[key] = custom[key]
+
+    return config

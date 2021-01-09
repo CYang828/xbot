@@ -51,4 +51,3 @@ def print_error_and_exit(message: Text, exit_code: int = 1) -> NoReturn:
 
     print_error(message)
     sys.exit(exit_code)
-

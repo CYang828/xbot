@@ -95,7 +95,7 @@ class CNEmbedding:
         with bz2.open(vector_path, "rt", encoding="utf8") as fin:
             lines = fin.readlines()
             # 第一行是元信息
-            for line in tqdm(lines[1:], desc="Generating pretrained embedding"):
+            for line in tqdm(lines[1:], desc="Generating pretrained embeddings"):
                 line = line.strip()
                 tokens = line.split()
                 word = tokens[0]

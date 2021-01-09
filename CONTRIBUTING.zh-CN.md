@@ -1,3 +1,5 @@
+[English](CONTRIBUTING.md)
+
 ## 如何向 XBot 贡献代码
 
 #### 1. Forking XBot 仓库

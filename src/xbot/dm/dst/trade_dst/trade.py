@@ -54,7 +54,7 @@ class EncoderRNN(nn.Module):
         if fix_embedding:
             self.embedding.weight.requires_grad = False
 
-        print("Encoder embedding requires_grad", self.embedding.weight.requires_grad)
+        print("Encoder embeddings requires_grad", self.embedding.weight.requires_grad)
 
     def forward(self, input_seqs, input_lengths):
         # Note: we run this all at once (over multiple batches of multiple sequences)
@@ -141,7 +141,7 @@ class Generator(nn.Module):
             len(slot_temp), batch_size, self.num_gates, device=story.device
         )
 
-        # Get the slot embedding
+        # Get the slot embeddings
         slot_emb_dict = {}
         # init
         slot_emb_arr = torch.zeros(
@@ -158,13 +158,13 @@ class Generator(nn.Module):
                 (1, self.hidden_size), dtype=torch.float, device=story.device
             )
 
-            # Domain embedding
+            # Domain embeddings
             if slot.split("-")[0] in self.slot_w2i.keys():
                 domain_w2idx = [self.slot_w2i[slot.split("-")[0]]]
                 domain_w2idx = torch.tensor(domain_w2idx, device=story.device)
                 domain_emb = self.Slot_emb(domain_w2idx)
 
-            # Slot embedding
+            # Slot embeddings
             if slot.split("-")[1] in self.slot_w2i.keys():
                 slot_w2idx = [self.slot_w2i[slot.split("-")[1]]]
                 slot_w2idx = torch.tensor(slot_w2idx, device=story.device)
@@ -541,9 +541,7 @@ if __name__ == "__main__":
     dials_path = os.path.join(data_path, "dev_dials.json")
     # download dials file
     if not os.path.exists(dials_path):
-        download_from_url(
-            "http://xbot.bslience.cn/dev_dials.json", dials_path
-        )
+        download_from_url("http://xbot.bslience.cn/dev_dials.json", dials_path)
 
     with open(os.path.join(data_path, "dev_dials.json"), "r", encoding="utf8") as f:
         dials = json.load(f)
