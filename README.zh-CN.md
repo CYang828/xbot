@@ -1,4 +1,4 @@
-[English](CONTRIBUTING.md)
+[English](README.md)
 
 # XBot
 
