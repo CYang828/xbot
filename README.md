@@ -3,37 +3,49 @@
 [![LICENSE](https://black.readthedocs.io/en/stable/_static/license.svg)](https://github.com/BSlience/xbot/blob/master/LICENSE)
 ![Version](https://img.shields.io/badge/Version-3.8%2B-orange)
 
+[English](README.en_US.md)
+
 # XBot
-This is a Conversational AI for X.
 
-Our vision is to make Conversational AI for everyone in future. Welcome to join us :rocket: :rocket: 
+这是一个面向任务的会话式AI。
 
-<img align="right" height="244" src="asset/xbot.jpg">
+我们的愿景是在将来为所有人提供会话式AI。欢迎您加入我们！
 
-## Quick Start
+![Image](https://github.com/BSlience/xbot/tree/master/asset/xbot.jpg)
+
+## 快速开始
+
+请在终端中运行以下命令，在本地计算机上克隆仓库：
+
 ```
 git clone https://github.com/BSlience/xbot.git
 ```
 
-## Where to get help
-There is extensive documentation in the [XBot Docs](http://xbot-friends.bslience.cn/).
+## 在哪里获得帮助
 
-## How to contribute
-We are very happy to receive and merge your contributions into this repository! 
+您可在[XBot文档](https://xbot-friends.bslience.cn/)中找到大量可供参考的文档。
 
-To contribute via pull request, follow these steps:
 
-1. Create an issue describing the feature you want to work on 
-2. Write your code, tests and documentation, and format them with ``black``
-3. Create a pull request describing your changes
+## 如何贡献
 
-For more detailed instructions on how to contribute code, check out these [code contributor guidelines](CONTRIBUTING.zh-CN.md).
+我们非常高兴收到您的贡献并将其合并到此存储库中！
 
-Your pull request will be reviewed by a maintainer, who will get
-back to you about any necessary changes or questions. 
+想要拉动贡献请求，请执行以下步骤：
 
-## License
-Licensed under the Apache License, Version 2.0.
-Copyright 2020 XBot Technologies GmbH. 
+    1.提出一个关于您要使用的功能的问题
 
-[Copy of the license](LICENSE).
+    2.编写代码，测试和文档，并通过加黑对其进行格式化
+
+    3.创建一个描述您所做更改的请求
+
+有关如何贡献代码的详细说明，请查看这里的[代码贡献者指南](https://github.com/BSlience/xbot/blob/master/CONTRIBUTING.zh-CN.md)。
+
+您的提取请求将由维护人员进行审核，若有必要的更改等问题，维护人员会与您联系。
+
+
+## 许可
+
+依据Apache许可证2.0版获得许可。 XBot Technologies GmbH版权所有2020。
+
+
+[许可副本](https://github.com/BSlience/xbot/blob/master/LICENSE)。
