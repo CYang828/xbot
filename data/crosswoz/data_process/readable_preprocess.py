@@ -17,7 +17,7 @@ def preprocess(mode):
     assert mode == "all" or mode == "usr" or mode == "sys"
 
     # path
-    data_key = ["train", "val", "tests"]
+    data_key = ["train", "val", "test"]
     data = {}
     for key in data_key:
         # read crosswoz source data from json.zip
@@ -62,6 +62,11 @@ def preprocess(mode):
             ensure_ascii=False,
             sort_keys=False,
         )
+        print(os.path.join(
+                    get_data_path(),
+                    "crosswoz/readable_data",
+                    f"readabe_{key}_data.json",
+                ))
 
 
 if __name__ == "__main__":
