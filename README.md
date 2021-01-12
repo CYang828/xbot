@@ -11,7 +11,7 @@
 
 我们的愿景是在将来为所有人提供会话式AI。欢迎您加入我们！
 
-![Image](https://github.com/BSlience/xbot/tree/master/asset/xbot.jpg)
+<img align="right" height="244" src="asset/xbot.jpg">
 
 ## 快速开始
 
