@@ -7,9 +7,9 @@
 
 # XBot
 
-XBot是一个智能对话系统框架。
+XBot是一个易用的智能对话系统框架，它能帮助你从0开始搭建适应你的应用场景的对话机器人。
 
-我们的愿景是在将来为每一个人提供使用简单、功能强大的智能对话系统。欢迎你的加入！:rocket: :rocket:
+我们的愿景是在将来为每一个人提供使用简单、功能强大的智能对话系统。欢迎你的加入:rocket: :rocket:
 
 <img align="right" height="244" src="asset/xbot.jpg">
 
@@ -20,6 +20,9 @@ XBot是一个智能对话系统框架。
 ```
 git clone https://github.com/BSlience/xbot.git
 ```
+
+## 整体架构
+![](asset/xbot-architecture.png)
 
 ## 在哪里获得帮助
 
@@ -38,7 +41,7 @@ git clone https://github.com/BSlience/xbot.git
 
     3.使用文字描述你的贡献
 
-有关如何贡献代码的详细说明，请查看这里的[代码贡献者指南](https://github.com/BSlience/xbot/blob/master/CONTRIBUTING.zh-CN.md)。
+有关如何贡献代码的详细说明，请查看这里的[代码贡献者指南](CONTRIBUTING.md)。
 
 你的请求将由维护人员进行审核，若有必要的更改等问题，维护人员会与你联系。
 
