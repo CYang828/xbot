@@ -14,6 +14,7 @@ colorama = "^0.4.4"
 coloredlogs = "^15.0"
 torch = "^1.7.1"
 transformers = "^4.1.1"
+tensorboard = "^2.4.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
