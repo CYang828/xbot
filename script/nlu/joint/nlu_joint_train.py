@@ -10,6 +10,7 @@ from data.crosswoz.data_process.nlu.nlu_dataloader import Dataloader
 from data.crosswoz.data_process.nlu.nlu_postprocess import (
     is_slot_da,
     recover_intent,
+    calculate_f1
 )
 
 import torch
@@ -21,6 +22,7 @@ def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
 
 def main():
     data_urls = {
@@ -273,7 +275,7 @@ def main():
             writer.add_scalar("slot_loss/val", val_slot_loss, global_step=step)
 
             for x in ["intent", "slot", "overall"]:
-                precision, recall, F1 = calculateF1(predict_golden[x])
+                precision, recall, F1 = calculate_f1(predict_golden[x])
                 print("-" * 20 + x + "-" * 20)
                 print("\t Precision: %.2f" % (100 * precision))
                 print("\t Recall: %.2f" % (100 * recall))
