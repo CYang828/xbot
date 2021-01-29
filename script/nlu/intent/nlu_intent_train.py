@@ -3,11 +3,11 @@ import json
 import random
 import zipfile
 
-from src.xbot.util.path import get_root_path, get_config_path, get_data_path
+from src.xbot.util.path import get_root_path, get_config_path
 from src.xbot.util.download import download_from_url
 from src.xbot.nlu.intent.intent_with_bert import IntentWithBert
-from data.crosswoz.data_process.nlu_intent_dataloader import Dataloader
-from data.crosswoz.data_process.nlu_intent_postprocess import (
+from data.crosswoz.data_process.nlu.nlu_intent_dataloader import Dataloader
+from data.crosswoz.data_process.nlu.nlu_intent_postprocess import (
     calculate_f1,
     recover_intent,
 )
@@ -22,6 +22,7 @@ def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
 
 def main():
     data_urls = {

@@ -6,10 +6,9 @@ import numpy as np
 from src.xbot.util.path import get_root_path
 from src.xbot.util.download import download_from_url
 from src.xbot.nlu.joint.joint_with_bert import JointWithBert
-from data.crosswoz.data_process.nlu_dataloader import Dataloader
-from data.crosswoz.data_process.nlu_postprocess import (
+from data.crosswoz.data_process.nlu.nlu_dataloader import Dataloader
+from data.crosswoz.data_process.nlu.nlu_postprocess import (
     is_slot_da,
-    calculate_f1,
     recover_intent,
 )
 
